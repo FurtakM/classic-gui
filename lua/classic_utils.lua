@@ -24,6 +24,9 @@ TID_Main_Menu_Options_Graphics_Windowed = 5013;
 TID_Main_Menu_Skirmish_ChangeMap = 5014;
 TID_Main_Menu_Mod_Old_Ver = 5015;
 TID_Main_Menu_Options_Switch_Interface = 5016;
+TID_Main_Menu_Back_To_Menu = 5017;
+TID_Main_Menu_Change_Name = 5018;
+
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
 TID_Main_Menu_Campaign_X2_Hint = 5104;
