@@ -23,6 +23,18 @@ menu.window_multiplayer.panel = getElementEX(
 	}
 );
 
+menu.window_multiplayer.panel.IRC = clListBox(
+	menu.window_multiplayer.panel, 
+	XYWH(8, 18, 766, 435), 
+	{}, 
+	1, 
+	'', 
+	{
+		texture = 'classic/edit/listbox_chat.png'
+	}
+);
+
+-- bottom buttons
 menu.window_multiplayer.panel.quit = clButton(
     menu.window_multiplayer.panel, 
     46, 
@@ -79,11 +91,25 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     {}
 );
 
+function initMultiplayer()
+	OW_IRC_CREATE();
+    OW_MULTI_ENABLE(true);
+    IN_LOBBY = true;
+end;
+
+function destroyMultiplayer()
+    IN_LOBBY = false;
+	OW_IRC_DESTROY();
+	OW_MULTI_ENABLE(false);
+end;
+
 function showMultiplayerWindow(MODE)
 	if MODE == 1 then
 		showMenuButton(0);
 		setVisible(menu.window_multiplayer, true);
+		initMultiplayer();
 	else
+		destroyMultiplayer();
 		setVisible(menu.window_multiplayer, false);
 		showMenuButton(2);
 	end;
