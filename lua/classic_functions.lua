@@ -840,8 +840,8 @@ function clSetComboBoxSelectedItem(ID, INDEX)
     setColour1({ID = COMBOBOX_LIST[ID].ELEMENTS[COMBOBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
 end;
 
-function clSetComboBoxValue(LABELID, VALUE)
-    setText({ID=LABELID}, SGUI_widesub(VALUE, 1, 22));
+function clSetComboBoxValue(ID, VALUE)
+    setText({ID=ID}, SGUI_widesub(VALUE, 1, 22));
 end;
 
 function clShowComboBoxList(ID, PARENTID, BUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE)
@@ -939,6 +939,105 @@ function clListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     clSetListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK);    
 
     return ELEMENT.list.scroll;
+end;
+
+function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
+    if (PROPERTIES.autoHideScroll == nil) then
+        PROPERTIES.autoHideScroll = false;
+    end;
+
+    if (PROPERTIES.visible == nil) then
+        PROPERTIES.visible = true;
+    end;
+
+    if (PROPERTIES.texture == nil) then
+        PROPERTIES.texture = 'classic/edit/combobox-small-list.png';
+    end;
+
+    if (PROPERTIES.itemHeight == nil) then
+        PROPERTIES.itemHeight = 16;
+    end;
+
+    if (CALLBACKS.added == nil) then
+        CALLBACKS.added = '';
+    end;
+
+    if (CALLBACKS.updated == nil) then
+        CALLBACKS.updated = '';
+    end;
+
+    if (CALLBACKS.selected == nil) then
+        CALLBACKS.selected = '';
+    end;
+
+    if (CALLBACKS.unselected == nil) then
+        CALLBACKS.unselected = '';
+    end;
+
+    local ELEMENT = getElementEX(
+        PARENT,
+        anchorNone,
+        POS,
+        PROPERTIES.visible,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    ELEMENT.list = getElementEX(
+        ELEMENT,
+        anchorNone,
+        XYWH(
+            0, 
+            0,
+            ELEMENT.width - 20,
+            ELEMENT.height
+        ),
+        true,
+        {
+            type = TYPE_CUSTOMLISTBOX,
+            itemheight = PROPERTIES.itemHeight,
+            callback_itemadded = CALLBACKS.added,
+            callback_itemupdated = CALLBACKS.updated,
+            callback_itemselected = CALLBACKS.selected,
+            callback_itemunselected = CALLBACKS.unselected,
+            texture = PROPERTIES.texture
+        }
+    );
+
+    ELEMENT.list.scroll = getScrollboxEX(
+        ELEMENT, 
+        anchorNone, 
+        XYWH(0, 0, ELEMENT.list.width, ELEMENT.list.height - 6),
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    set_Property(ELEMENT.list.scroll.ID, PROP_AUTOHIDESCROLL, PROPERTIES.autoHideScroll);
+
+    ELEMENT.list.scrollBar = clScrollBarEX2(
+        ELEMENT,
+        anchorNone,
+        XYWH(
+            ELEMENT.list.x + ELEMENT.list.width + 1, 
+            ELEMENT.list.y, 
+            12,
+            ELEMENT.list.height
+        ), 
+        ELEMENT.list.scroll, 
+        SKINTYPE_NONE,
+        false,
+        {
+            visible = PROPERTIES.visible
+        }
+    ); 
+
+    return {
+        ELEMENT = ELEMENT,
+        LIST = ELEMENT.list,
+        SCROLL = ELEMENT.list.scroll,
+    };
 end;
 
 function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
@@ -1116,4 +1215,98 @@ end;
 
 function clClosePrompt(ID)
     setVisibleID(ID, false);
+end;
+
+function clTextBox(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
+    PROPERTIES.type = TYPE_TEXTBOX;
+    
+    if PROPERTIES.font_name == nil then
+        PROPERTIES.font_name = ADMUI3L;
+    end;
+
+    PROPERTIES.text = TEXT;
+
+    return getElementEX(PARENT, ANCHOR, POSSIZE, true, PROPERTIES);
+end;
+
+function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
+    if (PROPERTIES.visible == nil) then
+        PROPERTIES.visible = true;
+    end;
+
+    if (PROPERTIES.texture == nil) then
+        PROPERTIES.texture = 'classic/edit/textbox.png';
+    end;
+
+    if (PROPERTIES.autoHideScroll == nil) then
+        PROPERTIES.autoHideScroll = false;
+    end;
+
+    if (PROPERTIES.font_colour == nil) then
+        PROPERTIES.font_colour = RGB(0, 0, 0);
+    end;
+
+    if (PROPERTIES.padding == nil) then
+        PROPERTIES.padding = {
+            x = 4,
+            y = 4
+        };
+    end;
+
+    ELEMENT = getElementEX(
+        PARENT, 
+        ANCHOR, 
+        XYWH(POSSIZE.X, POSSIZE.Y, POSSIZE.W, POSSIZE.H), 
+        PROPERTIES.visible,
+        PROPERTIES
+    );
+
+    ELEMENT.textbox = clTextBox(
+        ELEMENT,
+        anchorLTRB,
+        XYWH(
+            PROPERTIES.padding.x,
+            PROPERTIES.padding.y,
+            ELEMENT.width - PROPERTIES.padding.x,
+            ELEMENT.height - PROPERTIES.padding.y
+        ),
+        TEXT,
+        {
+            font_name = PROPERTIES.font_name,
+            font_colour = PROPERTIES.font_colour,
+        }
+    );
+
+    ELEMENT.textbox.scroll = getScrollboxEX(
+        ELEMENT, 
+        anchorNone, 
+        XYWH(0, 0, ELEMENT.textbox.width, ELEMENT.textbox.height - 6),
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    set_Property(ELEMENT.textbox.scroll.ID, PROP_AUTOHIDESCROLL, PROPERTIES.autoHideScroll);
+
+    ELEMENT.textbox.scrollBar = clScrollBarEX2(
+        ELEMENT,
+        anchorNone,
+        XYWH(
+            ELEMENT.textbox.x + ELEMENT.textbox.width + 1, 
+            ELEMENT.textbox.y, 
+            12,
+            ELEMENT.textbox.height
+        ), 
+        ELEMENT.textbox.scroll, 
+        SKINTYPE_NONE,
+        false,
+        {
+            visible = PROPERTIES.visible
+        }
+    );
+
+    return {
+        ELEMENT = ELEMENT,
+        TEXTBOX = ELEMENT.textbox,
+    };
 end;

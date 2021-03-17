@@ -23,16 +23,52 @@ menu.window_multiplayer.panel = getElementEX(
 	}
 );
 
-menu.window_multiplayer.panel.IRC = clListBox(
+menu.window_multiplayer.panel.IRC = clTextBoxWithTexture(
+    menu.window_multiplayer.panel,
+    anchorLTRB,
+    XYWH(8, 18, 744, 435), 
+    '',
+    {
+    	texture = 'classic/edit/textbox_irc.png',
+        font_colour = BLACK(),
+        nomouseevent = true,
+        font_name = ADMUI3L,
+    }
+);
+
+menu.window_multiplayer.panel.IRC2 = clTextBoxWithTexture(
+    menu.window_multiplayer.panel,
+    anchorLTRB,
+    XYWH(1, 1, 1, 1), 
+    '',
+    {
+    	visible = false,
+    }
+);
+
+menu.window_multiplayer.panel.IRC_Users = clListBoxCustom(
 	menu.window_multiplayer.panel, 
-	XYWH(8, 18, 766, 435), 
-	{}, 
-	1, 
-	'', 
+	XYWH(774, 18, 242, 435), 
 	{
-		texture = 'classic/edit/listbox_chat.png'
+		added = 'irc_name_added(0,%id,%rowid,%index,%data);',
+		updated = 'irc_name_updated(0,%rowid,%index,%data);',
+		selected = 'setColour1ID(%rowid,BLACKA(200));setBevelID(%rowid,true);setGradientID(%rowid,true);',
+		unselected = 'setColour1ID(%rowid,BLACKA(0));setBevelID(%rowid,false);setGradientID(%rowid,false);',
+	},
+	{
+		texture = 'classic/edit/listbox_users.png'
 	}
 );
+
+menu.window_multiplayer.panel.IRC_Users2 = clListBoxCustom(
+	menu.window_multiplayer.panel, 
+	XYWH(1, 1, 1, 1), 
+	{},
+	{
+		visible = false
+	}
+);
+
 
 -- bottom buttons
 menu.window_multiplayer.panel.quit = clButton(
@@ -114,3 +150,10 @@ function showMultiplayerWindow(MODE)
 		showMenuButton(2);
 	end;
 end;
+
+OW_IRC_BOXES(
+	menu.window_multiplayer.panel.IRC.TEXTBOX.ID, 
+	menu.window_multiplayer.panel.IRC_Users.LIST.ID,
+	menu.window_multiplayer.panel.IRC2.TEXTBOX.ID, 
+	menu.window_multiplayer.panel.IRC_Users2.LIST.ID
+);

@@ -335,6 +335,6 @@ function playSkirmish()
 end;
 
 -- @override
-function skirSort(Type,isInit)
+function skirSort(Type, isInit)
 
 end;
