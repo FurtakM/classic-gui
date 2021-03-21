@@ -1,3 +1,7 @@
+-- constants & variables
+BOX_IRC = 0;
+
+-- structure
 menu.window_multiplayer = getElementEX(
     menu, 
     anchorNone, 
@@ -26,7 +30,7 @@ menu.window_multiplayer.panel = getElementEX(
 menu.window_multiplayer.panel.IRC = clTextBoxWithTexture(
     menu.window_multiplayer.panel,
     anchorLTRB,
-    XYWH(8, 18, 744, 435), 
+    XYWH(8, 18, 756, 435), 
     '',
     {
     	texture = 'classic/edit/textbox_irc.png',
@@ -46,21 +50,21 @@ menu.window_multiplayer.panel.IRC2 = clTextBoxWithTexture(
     }
 );
 
-menu.window_multiplayer.panel.IRC_Users = clListBoxCustom(
+menu.window_multiplayer.panel.IRC.Users = clListBoxCustom(
 	menu.window_multiplayer.panel, 
 	XYWH(774, 18, 242, 435), 
 	{
-		added = 'irc_name_added(0,%id,%rowid,%index,%data);',
-		updated = 'irc_name_updated(0,%rowid,%index,%data);',
-		selected = 'setColour1ID(%rowid,BLACKA(200));setBevelID(%rowid,true);setGradientID(%rowid,true);',
-		unselected = 'setColour1ID(%rowid,BLACKA(0));setBevelID(%rowid,false);setGradientID(%rowid,false);',
+		added = 'clListBoxCustomItemNew(' .. BOX_IRC .. ', %id, %rowid, %index, %data);',
+		updated = 'clListBoxCustomItemUpdate(' .. BOX_IRC .. ', %rowid, %index, %data);',
+		selected = 'clListBoxCustomItemSelected(%rowid);',
+		unselected = 'clListBoxCustomItemUnselected(%rowid);',
 	},
 	{
 		texture = 'classic/edit/listbox_users.png'
 	}
 );
 
-menu.window_multiplayer.panel.IRC_Users2 = clListBoxCustom(
+menu.window_multiplayer.panel.IRC2.Users = clListBoxCustom(
 	menu.window_multiplayer.panel, 
 	XYWH(1, 1, 1, 1), 
 	{},
@@ -69,6 +73,35 @@ menu.window_multiplayer.panel.IRC_Users2 = clListBoxCustom(
 	}
 );
 
+menu.window_multiplayer.panel.IRC.messageInput = getEditEX(
+    menu.window_multiplayer.panel,
+    anchorNone,
+    XYWH(14, 460, 900, 14),
+    BankGotic_14,
+    '',
+    '',
+    {},
+    {
+        font_colour = BLACK(),
+        font_name = Arial_14,
+        callback_keypress = 'watchIRCMessage(%id, %k);'
+    }
+);
+
+menu.window_multiplayer.panel.IRC.sendButton = clButton(
+    menu.window_multiplayer.panel, 
+    930, 
+    457, 
+    88,
+    27, 
+    loc(TID_InGame_Chat_Send), 
+    'sendIRCMessage(' .. menu.window_multiplayer.panel.IRC.messageInput.ID .. ');',
+    {
+    	texture = 'classic/edit/menu_button_send_l.png',
+    	texture2 = 'classic/edit/menu_button_send_c.png',
+    	texture3 = 'classic/edit/menu_button_send_r.png'
+    }
+);
 
 -- bottom buttons
 menu.window_multiplayer.panel.quit = clButton(
@@ -127,12 +160,48 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     {}
 );
 
+----- functions -----
+
+-- watch message input IRC
+function watchIRCMessage(INPUT_ID, KEY)
+	if (KEY == VK_ESC) then
+		setText({ID = INPUT_ID}, '');
+		clearFocus();
+	end;
+
+	if (KEY == VK_ENTER) then
+		sendIRCMessage(INPUT_ID);
+	end;
+end;
+
+function getIRCActiveChannel()
+	if (getIndex(menu.window_multiplayer.panel.IRC.Users.LIST) > 0) then
+		return CUSTOM_LISTBOX_LIST[BOX_IRC][getIndex(menu.window_multiplayer.panel.IRC.Users.LIST)].name;
+	end;
+
+	return '';
+end;
+
+-- send message to IRC from current text input
+function sendIRCMessage(INPUT_ID)
+	local text = getText({ID = INPUT_ID});
+
+	if (strlen(text) == 0) then
+		return;
+	end;
+
+	OW_IRC_SENDTEXT(text, getIRCActiveChannel());
+	setText({ID = INPUT_ID}, '');
+end;
+
+-- init multiplayer when user join to lobby
 function initMultiplayer()
 	OW_IRC_CREATE();
     OW_MULTI_ENABLE(true);
     IN_LOBBY = true;
 end;
 
+-- destroy multiplayer instance when user left lobby
 function destroyMultiplayer()
     IN_LOBBY = false;
 	OW_IRC_DESTROY();
@@ -151,9 +220,10 @@ function showMultiplayerWindow(MODE)
 	end;
 end;
 
+-- function which put text data intro controls. Should be replaced by something else
 OW_IRC_BOXES(
 	menu.window_multiplayer.panel.IRC.TEXTBOX.ID, 
-	menu.window_multiplayer.panel.IRC_Users.LIST.ID,
+	menu.window_multiplayer.panel.IRC.Users.LIST.ID,
 	menu.window_multiplayer.panel.IRC2.TEXTBOX.ID, 
-	menu.window_multiplayer.panel.IRC_Users2.LIST.ID
+	menu.window_multiplayer.panel.IRC2.Users.LIST.ID
 );

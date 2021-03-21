@@ -38,6 +38,8 @@ VK_F4 = 115;
 VK_F5 = 116;
 VK_F6 = 117;
 VK_TILDE = 192;
+VK_ENTER = 13;
+VK_ESC = 27;
 
 function parseInt(value)
 	return tonumber(value);

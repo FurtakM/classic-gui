@@ -984,7 +984,7 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
         }
     );
 
-    ELEMENT.list = getElementEX(
+    ELEMENT.container = getElementEX(
         ELEMENT,
         anchorNone,
         XYWH(
@@ -995,20 +995,35 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
         ),
         true,
         {
+            texture = PROPERTIES.texture
+        }
+    );
+
+    ELEMENT.list = getElementEX(
+        ELEMENT.container,
+        anchorNone,
+        XYWH(
+            3, 
+            6,
+            ELEMENT.container.width - 6,
+            ELEMENT.container.height - 4
+        ),
+        true,
+        {
+            colour1 = WHITEA(),
             type = TYPE_CUSTOMLISTBOX,
             itemheight = PROPERTIES.itemHeight,
             callback_itemadded = CALLBACKS.added,
             callback_itemupdated = CALLBACKS.updated,
             callback_itemselected = CALLBACKS.selected,
-            callback_itemunselected = CALLBACKS.unselected,
-            texture = PROPERTIES.texture
+            callback_itemunselected = CALLBACKS.unselected
         }
     );
 
     ELEMENT.list.scroll = getScrollboxEX(
         ELEMENT, 
         anchorNone, 
-        XYWH(0, 0, ELEMENT.list.width, ELEMENT.list.height - 6),
+        XYWH(0, 0, ELEMENT.container.width, ELEMENT.container.height - 6),
         {
             colour1 = WHITEA()
         }
@@ -1020,10 +1035,10 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
         ELEMENT,
         anchorNone,
         XYWH(
-            ELEMENT.list.x + ELEMENT.list.width + 1, 
-            ELEMENT.list.y, 
+            ELEMENT.container.x + ELEMENT.container.width + 1, 
+            ELEMENT.container.y, 
             12,
-            ELEMENT.list.height
+            ELEMENT.container.height
         ), 
         ELEMENT.list.scroll, 
         SKINTYPE_NONE,
@@ -1038,6 +1053,34 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
         LIST = ELEMENT.list,
         SCROLL = ELEMENT.list.scroll,
     };
+end;
+
+function clListBoxCustomItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
+    getLabelEX({ID = ROW_ID}, anchorNone, XYWH(0, 0, getWidthID(ROW_ID), getHeightID(ROW_ID)), nil, DATA.name, {
+        colour1 = WHITEA(),
+        font_name = ADMUI3L,
+        border_colour = WHITEA(),
+        font_colour = RGB(0, 0, 0)
+    });
+
+    if (CUSTOM_LISTBOX_LIST[BOX_ID] == nil) then
+        CUSTOM_LISTBOX_LIST[BOX_ID] = {};
+    end;
+
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+end;
+
+function clListBoxCustomItemUpdate(BOX_ID, ROW_ID, INDEX, DATA)
+    setTextID(ROW_ID, DATA.name);
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+end;
+
+function clListBoxCustomItemSelected(ROW_ID)
+    setColour1({ID = ROW_ID}, RGB(191, 191, 191));
+end;
+
+function clListBoxCustomItemUnselected(ROW_ID)
+    setColour1({ID = ROW_ID}, WHITEA());
 end;
 
 function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
@@ -1225,6 +1268,8 @@ function clTextBox(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
     end;
 
     PROPERTIES.text = TEXT;
+    PROPERTIES.wordwrap = true;
+    PROPERTIES.scissor = true;
 
     return getElementEX(PARENT, ANCHOR, POSSIZE, true, PROPERTIES);
 end;
@@ -1258,7 +1303,9 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         ANCHOR, 
         XYWH(POSSIZE.X, POSSIZE.Y, POSSIZE.W, POSSIZE.H), 
         PROPERTIES.visible,
-        PROPERTIES
+        {
+            colour1 = WHITEA()
+        }
     );
 
     ELEMENT.textbox = clTextBox(
@@ -1267,20 +1314,21 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         XYWH(
             PROPERTIES.padding.x,
             PROPERTIES.padding.y,
-            ELEMENT.width - PROPERTIES.padding.x,
+            ELEMENT.width - 12 - PROPERTIES.padding.x,
             ELEMENT.height - PROPERTIES.padding.y
         ),
         TEXT,
         {
             font_name = PROPERTIES.font_name,
             font_colour = PROPERTIES.font_colour,
+            texture = PROPERTIES.texture
         }
     );
 
     ELEMENT.textbox.scroll = getScrollboxEX(
         ELEMENT, 
         anchorNone, 
-        XYWH(0, 0, ELEMENT.textbox.width, ELEMENT.textbox.height - 6),
+        XYWH(0, 0, ELEMENT.textbox.width, ELEMENT.textbox.height),
         {
             colour1 = WHITEA()
         }
@@ -1293,9 +1341,9 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         anchorNone,
         XYWH(
             ELEMENT.textbox.x + ELEMENT.textbox.width + 1, 
-            ELEMENT.textbox.y, 
+            ELEMENT.textbox.y - PROPERTIES.padding.y, 
             12,
-            ELEMENT.textbox.height
+            ELEMENT.textbox.height + PROPERTIES.padding.y
         ), 
         ELEMENT.textbox.scroll, 
         SKINTYPE_NONE,
