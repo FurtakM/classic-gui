@@ -82,6 +82,10 @@ function getSetting(setting)
         local keyLang = getLanguagesKey();
         local currentLang = OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_TEXTLANG);
 
+        if (currentLang == '') then
+            currentLang = 'ENG';
+        end;
+
         for i = 1, table.getn(keyLang) do
             if (keyLang[i] == currentLang) then
                 return i;
@@ -92,6 +96,10 @@ function getSetting(setting)
     if setting == OPTION_LANG_AUDIO then
         local keyLang = getLanguagesKey();
         local currentLang = OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_AUDIOLANG);
+
+        if (currentLang == '') then
+            currentLang = 'ENG';
+        end;
 
         for i = 1, table.getn(keyLang) do
             if (keyLang[i] == currentLang) then
@@ -203,14 +211,19 @@ function saveSliderSetting(setting, value)
 
     if setting == OPTION_SOUND_MUSIC then
         OW_settings_setvolume(VOLUME_MUSIC, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_MUSIC', value);
     end;
 
     if setting == OPTION_SOUND_EFFECTS then
         OW_settings_setvolume(VOLUME_EFFECTS, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_EFFECTS', value);
+        sound.playOptions('Effects/People/Weapons/Am/pistol.wav', VOLUME_EFFECTS);
     end;
 
     if setting == OPTION_SOUND_SPEECH then
         OW_settings_setvolume(VOLUME_SPEECH, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_SPEECH', value);
+        sound.playOptions('Dialogs/Am/Exclamations/EX_CA-ARM-2.wav', VOLUME_SPEECH);
     end;
 
     OW_settings_save();
