@@ -1020,17 +1020,6 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
         }
     );
 
-    ELEMENT.list.scroll = getScrollboxEX(
-        ELEMENT, 
-        anchorNone, 
-        XYWH(0, 0, ELEMENT.container.width, ELEMENT.container.height - 6),
-        {
-            colour1 = WHITEA()
-        }
-    );
-
-    set_Property(ELEMENT.list.scroll.ID, PROP_AUTOHIDESCROLL, PROPERTIES.autoHideScroll);
-
     ELEMENT.list.scrollBar = clScrollBarEX2(
         ELEMENT,
         anchorNone,
@@ -1040,7 +1029,7 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
             12,
             ELEMENT.container.height
         ), 
-        ELEMENT.list.scroll, 
+        ELEMENT.list, 
         SKINTYPE_NONE,
         false,
         {
@@ -1056,11 +1045,19 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
 end;
 
 function clListBoxCustomItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
-    getLabelEX({ID = ROW_ID}, anchorNone, XYWH(0, 0, getWidthID(ROW_ID), getHeightID(ROW_ID)), nil, DATA.name, {
+
+    local name = DATA.nick;
+
+    if (name == nil) then
+        name = DATA.name;
+    end;
+
+    getLabelEX({ID = ROW_ID}, anchorNone, XYWH(0, 0, getWidthID(ROW_ID), getHeightID(ROW_ID)), nil, name, {
         colour1 = WHITEA(),
         font_name = ADMUI3L,
         border_colour = WHITEA(),
-        font_colour = RGB(0, 0, 0)
+        font_colour = RGB(0, 0, 0),
+        nomouseevent = true
     });
 
     if (CUSTOM_LISTBOX_LIST[BOX_ID] == nil) then
@@ -1071,7 +1068,7 @@ function clListBoxCustomItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
 end;
 
 function clListBoxCustomItemUpdate(BOX_ID, ROW_ID, INDEX, DATA)
-    setTextID(ROW_ID, DATA.name);
+    setTextID(ROW_ID, DATA.nick);
     CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
 end;
 
@@ -1325,17 +1322,6 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         }
     );
 
-    ELEMENT.textbox.scroll = getScrollboxEX(
-        ELEMENT, 
-        anchorNone, 
-        XYWH(0, 0, ELEMENT.textbox.width, ELEMENT.textbox.height),
-        {
-            colour1 = WHITEA()
-        }
-    );
-
-    set_Property(ELEMENT.textbox.scroll.ID, PROP_AUTOHIDESCROLL, PROPERTIES.autoHideScroll);
-
     ELEMENT.textbox.scrollBar = clScrollBarEX2(
         ELEMENT,
         anchorNone,
@@ -1345,7 +1331,7 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
             12,
             ELEMENT.textbox.height + PROPERTIES.padding.y
         ), 
-        ELEMENT.textbox.scroll, 
+        ELEMENT.textbox, 
         SKINTYPE_NONE,
         false,
         {
