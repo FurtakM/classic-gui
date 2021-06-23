@@ -160,7 +160,9 @@ menu.window2.skirmish = clButton(
     30,  
     loc(TID_Main_Menu_Skirmish), 
     'showSkirmishWindow(1);',
-    {}
+    {
+        disabled = (#SKIRMISH_DATA == 0)
+    }
 );
 
 menu.window2.back = clButton(

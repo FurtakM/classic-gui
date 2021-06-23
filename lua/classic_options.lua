@@ -274,7 +274,7 @@ menu.window_options = getElementEX(
 menu.window_options.panel = getElementEX(
     menu.window_options, 
     anchorL, 
-    XYWH(LayoutWidth / 2 - 376, LayoutHeight / 2 - 180, 753, 360), 
+    XYWH(LayoutWidth / 2 - 376, LayoutHeight / 2 - 240, 753, 480), 
     true,
     {
         texture = 'classic/edit/background_options_2.png'
@@ -284,7 +284,7 @@ menu.window_options.panel = getElementEX(
 menu.window_options.panel.cancel = clButton(
     menu.window_options.panel, 
     12, 
-    320,
+    440,
     236, 
     30,
     loc(TID_msg_Cancel), 
@@ -295,7 +295,7 @@ menu.window_options.panel.cancel = clButton(
 menu.window_options.panel.shortcuts = clButton(
     menu.window_options.panel, 
     255, 
-    320,
+    440,
     244, 
     30,
     loc(TID_msg_Shortcuts), 
@@ -308,7 +308,7 @@ menu.window_options.panel.shortcuts = clButton(
 menu.window_options.panel.accept = clButton(
     menu.window_options.panel, 
     505, 
-    320,
+    440,
     236, 
     30,
     loc(TID_msg_Ok), 
@@ -528,10 +528,10 @@ menu.window_options.panel.alang.listbox = clComboBox(
     }
 );
 
-menu.window_options.panel.audio_desc = getLabelEX(
+menu.window_options.panel.lang_desc = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(264, 139, 200, 10),
+    XYWH(264, 204, 200, 10),
     Tahoma_12, 
     loc(TID_Main_Menu_Options_Lang_Label),
     {
@@ -564,6 +564,7 @@ menu.window_options.panel.graphics_label = getLabelEX(
     }
 );
 
+--[[
 menu.window_options.panel.graphics_graph_checkbox = clCheckbox(
     menu.window_options.panel,
     512,
@@ -621,12 +622,12 @@ menu.window_options.panel.graph_slider = clSliderElement(
     {
         hint = loc(TID_Options_Transparency_Fill_Desc)
     }
-);
+);--]]
 
 menu.window_options.panel.graphics_windowed_checkbox = clCheckbox(
     menu.window_options.panel,
     512, 
-    122,
+    41,
     'changeSetting(%id, ' .. OPTION_GRAPHICS_WINDOWED .. ')',
     {
         checked = getSetting(OPTION_GRAPHICS_WINDOWED),
@@ -637,7 +638,7 @@ menu.window_options.panel.graphics_windowed_checkbox = clCheckbox(
 menu.window_options.panel.graphics_windowed_label = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(531, 121, 200, 16),
+    XYWH(531, 40, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Graphics_Windowed),
     {
@@ -654,7 +655,7 @@ menu.window_options.panel.graphics_windowed_label = getLabelEX(
 menu.window_options.panel.resolution = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(507, 145, 230, 30), 
+    XYWH(507, 138, 230, 30), 
     true,
     {
         colour1 = WHITEA(),
@@ -826,7 +827,7 @@ menu.window_options.panel.game_steamoverlay = getLabelEX(
 menu.window_options.panel.game_label = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(12, 184, 200, 16),
+    XYWH(12, 304, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Game_Options),
     {
@@ -843,7 +844,7 @@ menu.window_options.panel.game_label = getLabelEX(
 menu.window_options.panel.game_subtitles_checkbox = clCheckbox(
     menu.window_options.panel,
     17,
-    240,
+    360,
     'changeSetting(%id, ' .. OPTION_GAME_SUBTITLES .. ')',
     {
         checked = getSetting(OPTION_GAME_SUBTITLES),
@@ -854,7 +855,7 @@ menu.window_options.panel.game_subtitles_checkbox = clCheckbox(
 menu.window_options.panel.game_subtitles = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(36, 239, 200, 16),
+    XYWH(36, 359, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Subtitles),
     {
@@ -871,7 +872,7 @@ menu.window_options.panel.game_subtitles = getLabelEX(
 menu.window_options.panel.game_objectives_checkbox = clCheckbox(
     menu.window_options.panel,
     17,
-    265,
+    385,
     'changeSetting(%id, ' .. OPTION_GAME_OBJECTIVES .. ')',
     {
         checked = getSetting(OPTION_GAME_OBJECTIVES),
@@ -881,7 +882,7 @@ menu.window_options.panel.game_objectives_checkbox = clCheckbox(
 menu.window_options.panel.game_objectives = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(36, 264, 200, 16),
+    XYWH(36, 384, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Auto_Objectives),
     {
@@ -898,7 +899,7 @@ menu.window_options.panel.game_objectives = getLabelEX(
 menu.window_options.panel.game_hold_ground = clCheckbox(
     menu.window_options.panel,
     17,
-    290,
+    410,
     'changeSetting(%id, ' .. OPTION_GAME_STANDGROUND .. ')',
     {
         checked = getSetting(OPTION_GAME_STANDGROUND),
@@ -909,7 +910,7 @@ menu.window_options.panel.game_hold_ground = clCheckbox(
 menu.window_options.panel.game_hold_ground_desc = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(36, 289, 200, 16),
+    XYWH(36, 409, 200, 16),
     BankGotic_14, 
     loc(TID_Options_HoldMode),
     {
@@ -927,7 +928,7 @@ menu.window_options.panel.game_hold_ground_desc = getLabelEX(
 menu.window_options.panel.behaviour_label = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(260, 184, 200, 16),
+    XYWH(260, 304, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Units_Behaviour),
     {
@@ -944,7 +945,7 @@ menu.window_options.panel.behaviour_label = getLabelEX(
 menu.window_options.panel.behaviour_desc = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(264, 202, 224, 27),
+    XYWH(264, 322, 224, 27),
     Tahoma_12, 
     loc(TID_Main_Menu_Options_Units_Behaviour_Label),
     {
@@ -961,7 +962,7 @@ menu.window_options.panel.behaviour_desc = getLabelEX(
 menu.window_options.panel.behaviour_wounded_checkbox = clCheckbox(
     menu.window_options.panel,
     265,
-    240,
+    360,
     'changeSetting(%id, ' .. OPTION_BEHAV_WOUNDED .. ')',
     {
         checked = getSetting(OPTION_BEHAV_WOUNDED),
@@ -972,7 +973,7 @@ menu.window_options.panel.behaviour_wounded_checkbox = clCheckbox(
 menu.window_options.panel.behaviour_wounded = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(284, 239, 200, 16),
+    XYWH(284, 359, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Wounded),
     {
@@ -989,7 +990,7 @@ menu.window_options.panel.behaviour_wounded = getLabelEX(
 menu.window_options.panel.behaviour_noncombat_checkbox = clCheckbox(
     menu.window_options.panel,
     265,
-    265,
+    385,
     'changeSetting(%id, ' .. OPTION_BEHAV_NONCOMBAT .. ')',
     {
         checked = getSetting(OPTION_BEHAV_NONCOMBAT),
@@ -1000,7 +1001,7 @@ menu.window_options.panel.behaviour_noncombat_checkbox = clCheckbox(
 menu.window_options.panel.behaviour_noncombat = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(284, 264, 200, 16),
+    XYWH(284, 384, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_NonSoldiers),
     {
@@ -1017,7 +1018,7 @@ menu.window_options.panel.behaviour_noncombat = getLabelEX(
 menu.window_options.panel.behaviour_vehicles_checkbox = clCheckbox(
     menu.window_options.panel,
     265,
-    290,
+    410,
     'changeSetting(%id, ' .. OPTION_BEHAV_VEHICLES .. ')',
     {
         checked = getSetting(OPTION_BEHAV_VEHICLES),
@@ -1028,7 +1029,7 @@ menu.window_options.panel.behaviour_vehicles_checkbox = clCheckbox(
 menu.window_options.panel.behaviour_vehicles = getLabelEX(
     menu.window_options.panel,
     anchorLT,
-    XYWH(284, 289, 200, 16),
+    XYWH(284, 409, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Vehicles),
     {

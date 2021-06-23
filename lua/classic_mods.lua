@@ -456,13 +456,13 @@ function showMod(id, name, dir, desc, steam_visible, coop_visible, mod_ver, mod_
     setText(menu.window_mods.preview.desc, SGUI_widesub(desc, 1, 890));
 
     -- display us logo
-    setVisible(menu.window_mods.preview.logo_us, (table.getn(OW_FILELIST('%ow%/mods/'..dir..'/missions/__am/01')) > 0));
+    setVisible(menu.window_mods.preview.logo_us, hasCampaignInMod(dir, 'AM'));
 
     -- display ar logo
-    setVisible(menu.window_mods.preview.logo_ar, (table.getn(OW_FILELIST('%ow%/mods/'..dir..'/missions/__ar/01')) > 0));
+    setVisible(menu.window_mods.preview.logo_ar, hasCampaignInMod(dir, 'AR'));
 
     -- display us logo
-    setVisible(menu.window_mods.preview.logo_ru, (table.getn(OW_FILELIST('%ow%/mods/'..dir..'/missions/__ru/01')) > 0));
+    setVisible(menu.window_mods.preview.logo_ru, hasCampaignInMod(dir, 'RU'));
 
     -- display coop
     setVisible(menu.window_mods.preview.coop, (parseInt(coop_visible) == 1));
@@ -471,7 +471,7 @@ function showMod(id, name, dir, desc, steam_visible, coop_visible, mod_ver, mod_
     setVisible(menu.window_mods.preview.steam, (parseInt(steam_visible) == 1));
 
     -- display skirmish
-    setVisible(menu.window_mods.preview.pvc, (table.getn(OW_FILELIST('%ow%/mods/'..dir..'/missions/_skirmish')) > 0));
+    setVisible(menu.window_mods.preview.pvc, hasSkirmishInMod(dir));
 
     -- reset flags
     local flags = {
@@ -556,15 +556,21 @@ function selectMod()
 end;
 
 function FROMOW_MODS_ADD(INFO) -- Called by OW!
+    local name, lang, desc;
+
 	if (INFO.id > -1) then
-        local name = INFO.ini.Mod;
+        name = INFO.ini.Mod;
 
         if (name == nil) then
             return;
         end;
 
-        local desc = '';
-        local lang = getvalue(OWV_LANG);
+        desc = '';
+        lang = getvalue(OWV_LANG);
+
+        if (lang == nil) then
+            lang = 'ENG';
+        end;
 
         if (lang == 'ENG') then
             if (INFO.ini.Desc_ENG ~= nil) then

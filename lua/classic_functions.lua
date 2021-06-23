@@ -1344,3 +1344,19 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         TEXTBOX = ELEMENT.textbox,
     };
 end;
+
+function filesInMod(mod, directory)
+    return OW_FILELIST('%ow%/mods/' .. mod .. '/' .. directory);
+end;
+
+function hasFilesInMod(mod, directory)
+    return (table.getn(filesInMod(mod, directory)) > 0);
+end;
+
+function hasCampaignInMod(mod, campaign)
+    return hasFilesInMod(mod, 'missions/__' .. campaign .. '/01') or hasFilesInMod(mod, 'Missions/__' .. string.lower(campaign) .. '/01');
+end;
+
+function hasSkirmishInMod(mod)
+    return hasFilesInMod(mod, 'missions/_skirmish') or hasFilesInMod(mod, 'Missions/_Skirmish');
+end;
