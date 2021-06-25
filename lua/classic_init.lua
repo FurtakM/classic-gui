@@ -22,6 +22,7 @@ include('classic_achivs');
 include('classic_options');
 include('classic_mods');
 include('classic_campaign');
+include('classic_multiplayer_dialogs');
 include('classic_multiplayer');
 include('classic_skirmish');
 include('classic_loadgame');

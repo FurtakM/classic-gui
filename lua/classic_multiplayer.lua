@@ -134,7 +134,7 @@ menu.window_multiplayer.panel.createGame = clButton(
     184,
     30, 
     loc(TID_Multi_button_create_server), 
-    '',
+    'ShowDialog(menu.window_multiplayer.createServer)',
     {}
 );
 
@@ -160,7 +160,23 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     {}
 );
 
+menu.window_multiplayer.createServer = createClassicLobby(dialog.back, 'classicCreateGame()', '');
+
 ----- functions -----
+
+function classicCreateGame()
+	local passwdText = '';
+	if ( getEnabled(menu.window_multiplayer.createServer.USE_PASSWD)) then
+		passwdText = getText(menu.window_multiplayer.createServer.PASSWD);
+	end;
+	ShowDialog(dialog.loadingMap);
+	if OW_ROOM_CREATE(getText(menu.window_multiplayer.createServer.SERVER),passwdText) then
+		setVisible(menu.window_multiplayer,false);
+		setVisible(Multi_Room,true);
+		multiroom_show();
+	end;
+	HideDialog(dialog.loadingMap);
+end;
 
 -- watch message input IRC
 function watchIRCMessage(INPUT_ID, KEY)
