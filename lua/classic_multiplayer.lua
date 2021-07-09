@@ -134,7 +134,7 @@ menu.window_multiplayer.panel.createGame = clButton(
     184,
     30, 
     loc(TID_Multi_button_create_server), 
-    '',
+    'ShowDialog(menu.window_multiplayer.createServer)',
     {}
 );
 
@@ -156,11 +156,41 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     184,
     30, 
     loc(TID_Multi_button_enter_ip), 
-    '',
+    'clOpenPrompt(menu.window_multiplayer.enterIP.ID, nil)',
     {}
 );
 
+menu.window_multiplayer.createServer = createClassicLobby(dialog.back, 'classicCreateGame()', '');
+menu.window_multiplayer.enterIP = createClassicEnterIP('clOpenPrompt(menu.window_multiplayer.enterPassword.ID, "")');
+menu.window_multiplayer.enterPassword = clPrompt('acceptIPPassword()',{});
+setY(menu.window_multiplayer.enterPassword.prompt,getY(menu.window_multiplayer.enterPassword.prompt)+5); --to make it obvious it is a second popup
 ----- functions -----
+
+function showMP()
+		setVisible(menu.window_multiplayer,false);
+		setVisible(Multi_Room,true);
+		multiroom_show();
+end;
+
+function classicCreateGame()
+	local passwdText = '';
+	if ( getEnabled(menu.window_multiplayer.createServer.USE_PASSWD)) then
+		passwdText = getText(menu.window_multiplayer.createServer.PASSWD);
+	end;
+	ShowDialog(dialog.loadingMap);
+	if OW_ROOM_CREATE(getText(menu.window_multiplayer.createServer.SERVER),passwdText) then
+		showMP();
+	end;
+	HideDialog(dialog.loadingMap);
+end;
+
+function acceptIPPassword()
+	if OW_ROOM_JOIN_IP(getText(menu.window_multiplayer.enterIP.prompt.input),getText(menu.window_multiplayer.enterPassword.prompt.input)) then --TODO: add password support
+		clClosePrompt(menu.window_multiplayer.enterPassword.ID);
+		clClosePrompt(menu.window_multiplayer.enterIP.ID);
+		showMP();
+	end;
+end;
 
 -- watch message input IRC
 function watchIRCMessage(INPUT_ID, KEY)

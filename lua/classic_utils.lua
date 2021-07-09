@@ -40,6 +40,7 @@ VK_F6 = 117;
 VK_TILDE = 192;
 VK_ENTER = 13;
 VK_ESC = 27;
+VK_TAB = 9;
 
 function parseInt(value)
 	return tonumber(value);
@@ -276,4 +277,16 @@ function stringToArray(str)
     end;
 
     return t;
+end;
+
+--keep this here untill it gets mereged into master utils
+function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
+	local str = get_Callback(ELEMENT.ID,_TYPE);
+	
+	if(REPLACE_TABLE) then
+		for k,v in pairs(REPLACE_TABLE) do
+			str = str:gsub('%%'..k,v);
+		end;
+	end;
+	return runstring(str);
 end;
