@@ -1,15 +1,3 @@
---keep this here untill it gets mereged into master UTILS
-VK_TAB = 9; --modded, cannot add to constants.lua
-function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
-	local str = get_Callback(ELEMENT.ID,_TYPE);
-	
-	if(REPLACE_TABLE) then
-		for k,v in pairs(REPLACE_TABLE) do
-			str = str:gsub('%%'..k,v);
-		end;
-	end;
-	return runstring(str);
-end;
 --------------------------------------------
 
 --intened to be used along with ShowDialog to block outside inputs
@@ -104,6 +92,12 @@ function createClassicLobby(PARENT, AFTER_OK, AFTER_CANCEL)
 	return ELEMENT;
 end;
 
-
-
-
+function createClassicEnterIP(AFTER_OK) 
+		local ELEMENT = clPrompt(AFTER_OK, {});
+		set_Property(ELEMENT.prompt.input.ID,PROP_INVALIDCHARS,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghifjlmnopqrstuvwxyz");
+		--taken straight from my edit of the vanill stuff :P
+		set_Callback(ELEMENT.ID,CALLBACK_VISIBILITY,'if (getText( {ID = '..ELEMENT.prompt.input.ID..' }) == "") then '..
+														'setText( {ID = '..ELEMENT.prompt.input.ID..'},"127.0.0.1");'..
+													'end;');
+		return ELEMENT;
+end;

@@ -1185,7 +1185,7 @@ function clPrompt(CALLBACK, PROPERTIES)
 
     local ELEMENT = getElementEX(
         nil,
-        anchorNone,
+        anchorLTRB,
         XYWH(0, 0, LayoutWidth, LayoutHeight),
         PROPERTIES.visible,
         {
@@ -1225,7 +1225,7 @@ function clPrompt(CALLBACK, PROPERTIES)
         139, 
         30,
         loc(TID_msg_Cancel), 
-        'setVisibleID(' .. ELEMENT.ID .. ', false);',
+        "clClosePrompt(".. ELEMENT.ID ..");",
         {}
     );
 
@@ -1240,6 +1240,10 @@ function clPrompt(CALLBACK, PROPERTIES)
         {}
     );
 
+
+	set_Callback(ELEMENT.prompt.input.ID,CALLBACK_KEYUP, 'if (%k == VK_ESC) then invokeCallback({ ID ='..ELEMENT.prompt.cancel.ID..'}, CALLBACK_MOUSECLICK) '..
+												'elseif (%k == VK_RETURN) then invokeCallback({ ID ='..ELEMENT.prompt.accept.ID..'}, CALLBACK_MOUSECLICK) end;');
+
     PROMPT_LIST[ELEMENT.ID] = {
         ID = ELEMENT.ID,
         INPUT = ELEMENT.prompt.input.ID,
@@ -1250,7 +1254,10 @@ end;
 
 function clOpenPrompt(ID, VALUE)
     setVisibleID(ID, true);
-    setTextID(PROMPT_LIST[ID].INPUT, VALUE);
+	setFocus({ID = PROMPT_LIST[ID].INPUT});
+	if(value ~= nil) then
+		setTextID(PROMPT_LIST[ID].INPUT, VALUE);
+	end;
 end;
 
 function clClosePrompt(ID)
