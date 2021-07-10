@@ -3,12 +3,14 @@
 --------------------------------
 ----------- Authors ------------
 ----------- Serpent ------------
------------- Jakes  ------------
+----------- Evil ---------------
+----------- Jakes  -------------
 --------------------------------
 ---------- Version 2.0 ---------
 --[[
 		Classic GUI
-		prefix - cl
+		prefix: cl
+		see: https://github.com/FurtakM/classic-gui
 ]]--
 
 include('classic_global');

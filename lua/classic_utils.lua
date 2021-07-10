@@ -7,6 +7,7 @@ TID_Main_Menu_User = 494;
 TID_Main_Menu_Play = 804;
 TID_Main_Menu_Skirmish = 539;
 TID_Main_Menu_Default = 419;
+TID_Main_Menu_UsePassword = 1043;
 TID_Main_Menu_AllAchivs = 5000;
 TID_Main_Menu_SteamOverlay = 5001;
 TID_Main_Menu_Options_Old_Type_Graph_Short = 5002;
