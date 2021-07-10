@@ -166,6 +166,11 @@ menu.window_multiplayer.enterPassword = clPrompt('acceptIPPassword()', {});
 
 setY(menu.window_multiplayer.enterPassword.prompt, getY(menu.window_multiplayer.enterPassword.prompt) + 5); --to make it obvious it is a second popup
 
+-- handlers
+function FROMOW_MULTIPLAYER_JOINFAILED(STATUS)
+    debug(STATUS);
+end;
+
 ----- functions -----
 function showMP()
 		setVisible(menu.window_multiplayer,false);
@@ -190,7 +195,7 @@ function classicCreateGame()
 end;
 
 function acceptIPPassword()
-	if OW_ROOM_JOIN_IP(getText(menu.window_multiplayer.enterIP.prompt.input),getText(menu.window_multiplayer.enterPassword.prompt.input)) then --TODO: add password support
+	if OW_ROOM_JOIN_IP(getText(menu.window_multiplayer.enterIP.prompt.input), getText(menu.window_multiplayer.enterPassword.prompt.input)) then --TODO: add password support
 		clClosePrompt(menu.window_multiplayer.enterPassword.ID);
 		clClosePrompt(menu.window_multiplayer.enterIP.ID);
 		showMP();
