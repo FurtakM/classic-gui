@@ -3,7 +3,7 @@
 -- modified by Serpent
 -- intened to be used along with ShowDialog to block outside inputs
 -- will close itself using HideDialog so do make sure to use the correct API.
-function createClassicLobby(PARENT, AFTER_OK, AFTER_CANCEL)
+function createServerDialog(PARENT, AFTER_OK, AFTER_CANCEL)
 
 	local ELEMENT = getElementEX(
 		PARENT,
@@ -196,7 +196,7 @@ function createClassicLobby(PARENT, AFTER_OK, AFTER_CANCEL)
 	return ELEMENT;
 end;
 
-function createClassicEnterIP(AFTER_OK) 
+function createEnterIPDialog(AFTER_OK) 
 		local ELEMENT = clPrompt(AFTER_OK, {});
 
 		set_Property(ELEMENT.prompt.input.ID, PROP_INVALIDCHARS, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghifjlmnopqrstuvwxyz");

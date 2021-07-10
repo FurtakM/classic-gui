@@ -160,25 +160,41 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     {}
 );
 
-menu.window_multiplayer.createServer = createClassicLobby(dialog.back, 'classicCreateGame()', '');
-menu.window_multiplayer.enterIP = createClassicEnterIP('clOpenPrompt(menu.window_multiplayer.enterPassword.ID, "")');
-menu.window_multiplayer.enterPassword = clPrompt('acceptIPPassword()', {});
-
-setY(menu.window_multiplayer.enterPassword.prompt, getY(menu.window_multiplayer.enterPassword.prompt) + 5); --to make it obvious it is a second popup
+menu.window_multiplayer.createServer = createServerDialog(dialog.back, 'createMultiplayerGame()', '');
+menu.window_multiplayer.enterIP = createEnterIPDialog('joinToServer(1, 0)');
+menu.window_multiplayer.enterPassword = clPrompt('joinToServer(0, 0)', {});
+--setY(menu.window_multiplayer.enterPassword.prompt, getY(menu.window_multiplayer.enterPassword.prompt) + 5); --to make it obvious it is a second popup
 
 -- handlers
-function FROMOW_MULTIPLAYER_JOINFAILED(STATUS)
+function FROMOW_MULTIPLAYER_JOINFAILED(MESSAGE, STATUS)
     debug(STATUS);
 end;
 
------ functions -----
-function showMP()
-		setVisible(menu.window_multiplayer,false);
-		setVisible(Multi_Room,true);
-		multiroom_show();
+function FROMOW_MULTIPLAYER_DOJOINROOM(ADDRESS, PASSWORD)
+	showMultiplayerWindow(1);
+
+    if OW_ROOM_JOIN(ADDRESS, PASSWORD, true) then
+        showMultiplayerGame();
+    end;
 end;
 
-function classicCreateGame()
+function FROMOW_MULTIPLAYER_HOSTGAME()
+	showMultiplayerWindow(1);
+end;
+
+function FROMOW_MULTIPLAYER_OPEN()
+	showMultiplayerWindow(1);
+end;
+
+----- functions -----
+function showMultiplayerGame() -- TODO
+	debug('MultiplayerRoom');
+	--setVisible(menu.window_multiplayer,false);
+	--setVisible(Multi_Room,true);
+	--multiroom_show();
+end;
+
+function createMultiplayerGame()
 	local passwdText = '';
 
 	if (getEnabled(menu.window_multiplayer.createServer.USE_PASSWD)) then
@@ -188,17 +204,31 @@ function classicCreateGame()
 	ShowDialog(dialog.loadingMap);
 
 	if OW_ROOM_CREATE(getText(menu.window_multiplayer.createServer.SERVER), passwdText) then
-		showMP();
+		showMultiplayerGame();
 	end;
 
 	HideDialog(dialog.loadingMap);
 end;
 
-function acceptIPPassword()
-	if OW_ROOM_JOIN_IP(getText(menu.window_multiplayer.enterIP.prompt.input), getText(menu.window_multiplayer.enterPassword.prompt.input)) then --TODO: add password support
-		clClosePrompt(menu.window_multiplayer.enterPassword.ID);
-		clClosePrompt(menu.window_multiplayer.enterIP.ID);
-		showMP();
+-- 0: without IP
+-- 1: with IP
+function joinToServer(MODE, ROOMID)
+	clClosePrompt(menu.window_multiplayer.enterPassword.ID);
+	clClosePrompt(menu.window_multiplayer.enterIP.ID);
+
+	local password = getText(menu.window_multiplayer.enterPassword.prompt.input);
+
+	if (parseInt(MODE) == 0) then
+		if OW_ROOM_JOIN(ROOMID, password, true) then
+            showMultiplayerGame();
+        end;
+	else
+		local ip = getText(menu.window_multiplayer.enterIP.prompt.input);
+
+		-- if 3rd param is true then error dialog is not display
+		if OW_ROOM_JOIN_IP(ip, password, true) then --TODO: add password support
+			showMultiplayerGame();
+		end;
 	end;
 end;
 
