@@ -316,6 +316,12 @@ function showMultiplayerWindow(MODE)
 	end;
 end;
 
+function updateServersList()
+	if IN_LOBBY then
+    	OW_MULTILOBBY_IDLE();
+    end;
+end;
+
 -- function which put text data intro controls. Should be replaced by something else
 OW_IRC_BOXES(
 	menu.window_multiplayer.panel.IRC.TEXTBOX.ID, 
@@ -326,3 +332,7 @@ OW_IRC_BOXES(
 
 -- function which get server list data
 OW_UI_SET_LOBBY_SERVERLISTBOX(menu.window_multiplayer.panel.serverList.LIST.ID);
+
+-- callback
+-- send request for server list
+regTickCallback('updateServersList();');
