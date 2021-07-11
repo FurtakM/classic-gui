@@ -1080,6 +1080,55 @@ function clListBoxCustomItemUnselected(ROW_ID)
     setColour1({ID = ROW_ID}, WHITEA());
 end;
 
+function clListBoxCustomServerItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
+    local record = '';
+
+    if (DATA.SERVERNAME ~= '') then
+        record = record .. DATA.SERVERNAME;
+    end;
+
+    if DATA.GAMEVERSION ~= '' then
+        record = record .. '[' .. DATA.GAMEVERSION .. ']';
+    end;
+
+    getLabelEX({ID = ROW_ID}, anchorNone, XYWH(0, 0, getWidthID(ROW_ID), getHeightID(ROW_ID)), nil, record, {
+        colour1 = WHITEA(),
+        font_name = ADMUI3L,
+        border_colour = WHITEA(),
+        font_colour = RGB(0, 0, 0),
+        nomouseevent = true
+    });
+
+    if (CUSTOM_LISTBOX_LIST[BOX_ID] == nil) then
+        CUSTOM_LISTBOX_LIST[BOX_ID] = {};
+    end;
+
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+end;
+
+function clListBoxCustomItemServerUpdate(BOX_ID, ROW_ID, INDEX, DATA)
+    local record = '';
+
+    if (DATA.SERVERNAME ~= '') then
+        record = record .. DATA.SERVERNAME;
+    end;
+
+    if DATA.GAMEVERSION ~= '' then
+        record = record .. '[' .. DATA.GAMEVERSION .. ']';
+    end;
+
+    setTextID(ROW_ID, record);
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+end;
+
+function clListBoxCustomServerItemSelected(ROW_ID)
+    setColour1({ID = ROW_ID}, RGB(191, 191, 191));
+end;
+
+function clListBoxCustomServerItemUnselected(ROW_ID)
+    setColour1({ID = ROW_ID}, WHITEA());
+end;
+
 function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
     sgui_deletechildren(PARENT.ID);
 

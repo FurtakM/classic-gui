@@ -1,5 +1,6 @@
 -- constants & variables
 BOX_IRC = 0;
+BOX_SERVER = 1;
 
 -- structure
 menu.window_multiplayer = getElementEX(
@@ -103,6 +104,21 @@ menu.window_multiplayer.panel.IRC.sendButton = clButton(
     }
 );
 
+-- server list
+menu.window_multiplayer.panel.serverList = clListBoxCustom(
+	menu.window_multiplayer.panel, 
+	XYWH(8, 504, 764, 215), 
+	{
+		added = 'clListBoxCustomServerItemNew(' .. BOX_SERVER .. ', %id, %rowid, %index, %data);',
+		updated = 'clListBoxCustomItemServerUpdate(' .. BOX_SERVER .. ', %rowid, %index, %data);',
+		selected = 'clListBoxCustomItemServerSelected(%rowid);',
+		unselected = 'clListBoxCustomItemServerUnselected(%rowid);',
+	},
+	{
+		texture = 'classic/edit/msservers_listbox.png'
+	}
+);
+
 -- bottom buttons
 menu.window_multiplayer.panel.quit = clButton(
     menu.window_multiplayer.panel, 
@@ -160,20 +176,20 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     {}
 );
 
-menu.window_multiplayer.createServer = createServerDialog(dialog.back, 'createMultiplayerGame()', '');
-menu.window_multiplayer.enterIP = createEnterIPDialog('joinToServer(1, 0)');
+menu.window_multiplayer.createServer = clCreateServerDialog(dialog.back, 'createMultiplayerGame()', '');
+menu.window_multiplayer.enterIP = clEnterIPDialog('joinToServer(1, 0)');
 menu.window_multiplayer.enterPassword = clPrompt('joinToServer(0, 0)', {});
 --setY(menu.window_multiplayer.enterPassword.prompt, getY(menu.window_multiplayer.enterPassword.prompt) + 5); --to make it obvious it is a second popup
 
 -- handlers
 function FROMOW_MULTIPLAYER_JOINFAILED(MESSAGE, STATUS)
-    debug(STATUS);
+    -- debug(STATUS);
 end;
 
 function FROMOW_MULTIPLAYER_DOJOINROOM(ADDRESS, PASSWORD)
 	showMultiplayerWindow(1);
 
-    if OW_ROOM_JOIN(ADDRESS, PASSWORD, true) then
+    if OW_ROOM_JOIN(ADDRESS, PASSWORD, false) then
         showMultiplayerGame();
     end;
 end;
@@ -186,8 +202,18 @@ function FROMOW_MULTIPLAYER_OPEN()
 	showMultiplayerWindow(1);
 end;
 
+function FROMOW_MULTIPLAYER_STARTGAME()
+    IN_LOBBY = false;
+    OW_IRC_DESTROY();
+end;
+
+function FROMOW_MULTIPLAYER_MODCHANGE()
+	showMultiplayerWindow(0);
+end;
+
 ----- functions -----
 function showMultiplayerGame() -- TODO
+  	IN_LOBBY = false;	
 	debug('MultiplayerRoom');
 	--setVisible(menu.window_multiplayer,false);
 	--setVisible(Multi_Room,true);
@@ -201,32 +227,32 @@ function createMultiplayerGame()
 		passwdText = getText(menu.window_multiplayer.createServer.PASSWD);
 	end;
 
-	ShowDialog(dialog.loadingMap);
+	--ShowDialog(dialog.loadingMap);
 
 	if OW_ROOM_CREATE(getText(menu.window_multiplayer.createServer.SERVER), passwdText) then
 		showMultiplayerGame();
 	end;
 
-	HideDialog(dialog.loadingMap);
+	--HideDialog(dialog.loadingMap);
 end;
 
 -- 0: without IP
 -- 1: with IP
-function joinToServer(MODE, ROOMID)
+function joinToServer(MODE, ROOM_ID)
 	clClosePrompt(menu.window_multiplayer.enterPassword.ID);
 	clClosePrompt(menu.window_multiplayer.enterIP.ID);
 
 	local password = getText(menu.window_multiplayer.enterPassword.prompt.input);
 
 	if (parseInt(MODE) == 0) then
-		if OW_ROOM_JOIN(ROOMID, password, true) then
+		if OW_ROOM_JOIN(ROOM_ID, password, false) then
             showMultiplayerGame();
         end;
 	else
 		local ip = getText(menu.window_multiplayer.enterIP.prompt.input);
 
 		-- if 3rd param is true then error dialog is not display
-		if OW_ROOM_JOIN_IP(ip, password, true) then --TODO: add password support
+		if OW_ROOM_JOIN_IP(ip, password, false) then --TODO: add password support
 			showMultiplayerGame();
 		end;
 	end;
@@ -297,3 +323,6 @@ OW_IRC_BOXES(
 	menu.window_multiplayer.panel.IRC2.TEXTBOX.ID, 
 	menu.window_multiplayer.panel.IRC2.Users.LIST.ID
 );
+
+-- function which get server list data
+OW_UI_SET_LOBBY_SERVERLISTBOX(menu.window_multiplayer.panel.serverList.LIST.ID);
