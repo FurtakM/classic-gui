@@ -142,7 +142,7 @@ function clCreateServerDialog(PARENT, AFTER_OK, AFTER_CANCEL)
 			setFocus(ELEMENT.SERVER);
 		else
 			setEnabled(self,true);			
-			setVisible(ELEMENT.PASSWD_BACK,true);
+			setVisible(ELEMENT.PASSWD_BACK, true);
 		end;
 	end;
 

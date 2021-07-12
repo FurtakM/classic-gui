@@ -32,6 +32,9 @@ TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
 TID_Main_Menu_Campaign_X2_Hint = 5104;
 
+VK_TAB = 9;
+VK_ENTER = 13;
+VK_ESC = 27;
 VK_F1 = 112;
 VK_F2 = 113;
 VK_F3 = 114;
@@ -39,11 +42,13 @@ VK_F4 = 115;
 VK_F5 = 116;
 VK_F6 = 117;
 VK_TILDE = 192;
-VK_ENTER = 13;
-VK_ESC = 27;
-VK_TAB = 9;
+
 
 function parseInt(value)
+    if (type(value) == 'boolean') then
+        return value and 1 or 0;
+    end;
+
 	return tonumber(value);
 end;
 
@@ -269,7 +274,6 @@ function copy(obj, seen)
     return res;
 end;
 
-
 function stringToArray(str)
     local t = {};
 
@@ -282,12 +286,13 @@ end;
 
 --keep this here untill it gets mereged into master utils
 function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
-	local str = get_Callback(ELEMENT.ID,_TYPE);
+	local str = get_Callback(ELEMENT.ID, _TYPE);
 	
-	if(REPLACE_TABLE) then
+	if (REPLACE_TABLE) then
 		for k,v in pairs(REPLACE_TABLE) do
-			str = str:gsub('%%'..k,v);
+			str = str:gsub('%%' .. k,v);
 		end;
 	end;
+
 	return runstring(str);
 end;

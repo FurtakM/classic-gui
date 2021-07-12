@@ -15,7 +15,7 @@ function showMods(mode)
     end;
 end;
 
-function modsclButton(X, Y, CAPTION, EVENT)
+function clModButton(X, Y, CAPTION, EVENT)
     return clButton(
         menu.window_mods.list.mods, 
         X, 
@@ -241,7 +241,7 @@ menu.window_mods.preview.logo_us = getElementEX(
     XYWH(10, 207, 62, 62), 
     false,
     {
-        texture='classic/edit/mod_us_logo.png'
+        texture = 'classic/edit/mod_us_logo.png'
     }
 );
 
@@ -261,7 +261,7 @@ menu.window_mods.preview.logo_ru = getElementEX(
     XYWH(202, 207, 62, 62), 
     false,
     {
-        texture='classic/edit/mod_ru_logo.png'
+        texture = 'classic/edit/mod_ru_logo.png'
     }
 );
 
@@ -654,7 +654,7 @@ function FROMOW_MODS_ADD(INFO) -- Called by OW!
             mod_req_ver = INFO.ini.Req_Ver;
         end;
 
-        local button = modsclButton(
+        local button = clModButton(
         	10,
             INFO.id * 40,
             SGUI_widesub(name, 1, 18),

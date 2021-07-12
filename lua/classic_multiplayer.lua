@@ -1,6 +1,7 @@
 -- constants & variables
 BOX_IRC = 0;
 BOX_SERVER = 1;
+MULTIPLAYER_SERVER = {}; -- contains server data which user choose, should be reset each time when user leave server
 
 -- structure
 menu.window_multiplayer = getElementEX(
@@ -112,7 +113,7 @@ menu.window_multiplayer.panel.serverList = clListBoxCustom(
 		added = 'clListBoxCustomServerItemNew(' .. BOX_SERVER .. ', %id, %rowid, %index, %data);',
 		updated = 'clListBoxCustomItemServerUpdate(' .. BOX_SERVER .. ', %rowid, %index, %data);',
 		selected = 'clListBoxCustomItemServerSelected(%rowid);',
-		unselected = 'clListBoxCustomItemServerUnselected(%rowid);',
+		unselected = 'clListBoxCustomItemServerUnselected(%rowid);'
 	},
 	{
 		texture = 'classic/edit/msservers_listbox.png'
@@ -172,14 +173,13 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
     184,
     30, 
     loc(TID_Multi_button_enter_ip), 
-    'clOpenPrompt(menu.window_multiplayer.enterIP.ID, nil)',
+    'requestJoinToServerIP();',
     {}
 );
 
 menu.window_multiplayer.createServer = clCreateServerDialog(dialog.back, 'createMultiplayerGame()', '');
-menu.window_multiplayer.enterIP = clEnterIPDialog('joinToServer(1, 0)');
-menu.window_multiplayer.enterPassword = clPrompt('joinToServer(0, 0)', {});
---setY(menu.window_multiplayer.enterPassword.prompt, getY(menu.window_multiplayer.enterPassword.prompt) + 5); --to make it obvious it is a second popup
+menu.window_multiplayer.enterIP = clEnterIPDialog('clOpenPrompt(menu.window_multiplayer.enterPassword.ID, "")');
+menu.window_multiplayer.enterPassword = clPrompt('joinToServer();', {});
 
 -- handlers
 function FROMOW_MULTIPLAYER_JOINFAILED(MESSAGE, STATUS)
@@ -214,10 +214,8 @@ end;
 ----- functions -----
 function showMultiplayerGame() -- TODO
   	IN_LOBBY = false;	
+	showMultiplayerWindow(0);
 	debug('MultiplayerRoom');
-	--setVisible(menu.window_multiplayer,false);
-	--setVisible(Multi_Room,true);
-	--multiroom_show();
 end;
 
 function createMultiplayerGame()
@@ -236,26 +234,179 @@ function createMultiplayerGame()
 	--HideDialog(dialog.loadingMap);
 end;
 
--- 0: without IP
--- 1: with IP
-function joinToServer(MODE, ROOM_ID)
+-- join to server using item from servers list
+function requestJoinToServer(HAS_PASSWORD, INDEX)
+	MULTIPLAYER_SERVER.Mode = 0;
+	MULTIPLAYER_SERVER.Index = INDEX;
+
+	if (HAS_PASSWORD == 1) then
+		clOpenPrompt(menu.window_multiplayer.enterPassword.ID, nil);
+	else
+		joinToServer();
+	end;
+end;
+
+-- join to server using `Enter IP prompt`
+function requestJoinToServerIP()
+	MULTIPLAYER_SERVER.Mode = 1;
+	MULTIPLAYER_SERVER.Index = 0;
+
+	clOpenPrompt(menu.window_multiplayer.enterIP.ID, nil);
+end;
+
+function joinToServer()
 	clClosePrompt(menu.window_multiplayer.enterPassword.ID);
 	clClosePrompt(menu.window_multiplayer.enterIP.ID);
+
+	local MODE = MULTIPLAYER_SERVER.Mode; -- 0: without IP, 1: with IP
+	local INDEX = MULTIPLAYER_SERVER.Index;
 
 	local password = getText(menu.window_multiplayer.enterPassword.prompt.input);
 
 	if (parseInt(MODE) == 0) then
-		if OW_ROOM_JOIN(ROOM_ID, password, false) then
+		if OW_ROOM_JOIN(CUSTOM_LISTBOX_LIST[BOX_SERVER][INDEX].ROOMID, password, false) then
             showMultiplayerGame();
         end;
 	else
 		local ip = getText(menu.window_multiplayer.enterIP.prompt.input);
 
 		-- if 3rd param is true then error dialog is not display
-		if OW_ROOM_JOIN_IP(ip, password, false) then --TODO: add password support
+		if OW_ROOM_JOIN_IP(ip, password, false) then
 			showMultiplayerGame();
 		end;
 	end;
+end;
+
+function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
+    local netType = '';
+    local serverName = '';
+    local gameVer = '';
+    local playerCount = DATA.NUMPLAYERS;
+    local playerMaxCount = DATA.MAXPLAYERS;
+    local modDir = DATA.MODDIR;
+    local modVer = DATA.MODVER;
+    local isDedicated = DATA.ISDEDICATED;
+    local ping = DATA.REPLYTIME;
+    local hasPassword = DATA.HASPASSWORD;
+    local allowToJoin = getvalue(OWV_PROTOCOLVERSION) == DATA.PROTOCOLVERSION and getvalue(OWV_MODDIR) == modDir;
+
+ 	if (allowToJoin) then
+ 		fontColour = RGB(0, 0, 0);
+ 	else
+ 		fontColour = RGB(255, 0, 0);
+ 	end;
+
+    if (isDedicated) then
+        playerCount = playerCount - 1;
+        playerMaxCount = playerMaxCount - 1;
+    end;
+
+    if (DATA.NETTYPE ~= '') then
+        if (DATA.NETTYPE == 'NET') then
+            netType = 'Internet';
+        else
+            netType = DATA.NETTYPE;
+        end;
+    end;
+
+    if (DATA.SERVERNAME ~= '') then
+        serverName = DATA.SERVERNAME;
+    end;
+
+    if DATA.GAMEVERSION ~= '' then
+        gameVer = '[' .. DATA.GAMEVERSION .. ']';
+    end;
+
+    sgui_deletechildren(ROW_ID);
+
+    local row = getElementEX(
+        {ID = ROW_ID},
+        anchorNone,
+        XYWH(
+            0,
+            0,
+            getWidthID(ROW_ID), 
+            getHeightID(ROW_ID)
+        ),
+        true,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    local nettypeLabel = getLabelEX(
+        row, 
+        anchorNone, 
+        XYWH(0, 0, 70, getHeight(row)), 
+        nil, 
+        netType, 
+        {
+            colour1 = RGB(120, 220, 120),
+            font_name = ADMUI3L,
+            border_colour = WHITEA(),
+            font_colour = fontColour,
+            nomouseevent = true,
+            scissor = true
+        }
+    );
+
+    local gameVerLabel = getLabelEX(
+        row, 
+        anchorNone, 
+        XYWH(80, 0, 80, getHeight(row)), 
+        nil, 
+        gameVer, 
+        {
+            colour1 = RGB(100, 100, 100),
+            font_name = ADMUI3L,
+            border_colour = WHITEA(),
+            font_colour = fontColour,
+            nomouseevent = true,
+            scissor = true
+        }
+    );
+
+    local serverNameLabel = getLabelEX(
+        row, 
+        anchorNone, 
+        XYWH(170, 0, 340, getHeight(row)), 
+        nil, 
+        serverName .. '  ' .. playerCount .. '/' .. playerMaxCount, 
+        {
+            colour1 = RGB(120, 120, 120),
+            font_name = ADMUI3L,
+            border_colour = WHITEA(),
+            font_colour = fontColour,
+            nomouseevent = true,
+            scissor = true
+        }
+    );
+
+    set_Callback(row.ID, CALLBACK_MOUSEDBLCLICK, 'requestJoinToServer(' .. parseInt(hasPassword) .. ',' .. INDEX .. ');');
+end;
+
+function clListBoxCustomServerItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
+    generateMultiplayerServerData(ROW_ID, INDEX, DATA);
+
+    if (CUSTOM_LISTBOX_LIST[BOX_ID] == nil) then
+        CUSTOM_LISTBOX_LIST[BOX_ID] = {};
+    end;
+
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+end;
+
+function clListBoxCustomItemServerUpdate(BOX_ID, ROW_ID, INDEX, DATA)
+    generateMultiplayerServerData(ROW_ID, INDEX, DATA);
+    
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+end;
+
+function clListBoxCustomServerItemSelected(ROW_ID)
+    setColour1({ID = ROW_ID}, RGB(191, 191, 191));
+end;
+
+function clListBoxCustomServerItemUnselected(ROW_ID)
+    setColour1({ID = ROW_ID}, WHITEA());
 end;
 
 -- watch message input IRC
