@@ -341,7 +341,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
         nil, 
         netType, 
         {
-            colour1 = RGB(120, 220, 120),
+            colour1 = WHITEA(),
             font_name = ADMUI3L,
             border_colour = WHITEA(),
             font_colour = fontColour,
@@ -357,7 +357,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
         nil, 
         gameVer, 
         {
-            colour1 = RGB(100, 100, 100),
+           	colour1 = WHITEA(),
             font_name = ADMUI3L,
             border_colour = WHITEA(),
             font_colour = fontColour,
@@ -365,15 +365,21 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
             scissor = true
         }
     );
+
+    local serverLabel = serverName .. '  ' .. playerCount .. '/' .. playerMaxCount;
+
+    if (modDir ~= '') then
+    	serverLabel = modDir .. '[' .. modVer .. ']  ' .. serverLabel;
+    end;
 
     local serverNameLabel = getLabelEX(
         row, 
         anchorNone, 
         XYWH(170, 0, 340, getHeight(row)), 
         nil, 
-        serverName .. '  ' .. playerCount .. '/' .. playerMaxCount, 
+        serverLabel,
         {
-            colour1 = RGB(120, 120, 120),
+            colour1 = WHITEA(),
             font_name = ADMUI3L,
             border_colour = WHITEA(),
             font_colour = fontColour,
@@ -382,7 +388,63 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
         }
     );
 
+    --if (hasPassword) then
+	    local lockerIcon = getElementEX(
+	    	row,
+	        anchorR,
+	        XYWH(
+	          getWidth(row) - 40,
+	          3,
+	          11, 
+	          11
+	        ),
+	        true,
+	        {
+	            texture = 'classic/edit/lock.png'
+	        }
+	    );
+	-- end;
+
+	local pingIcon = getElementEX(
+    	row,
+        anchorR,
+        XYWH(
+          getWidth(row) - 20,
+          1,
+          13, 
+          14
+        ),
+        true,
+        {
+            colour1 = pingColour(ping)
+        }
+    );
+
     set_Callback(row.ID, CALLBACK_MOUSEDBLCLICK, 'requestJoinToServer(' .. parseInt(hasPassword) .. ',' .. INDEX .. ');');
+end;
+
+function pingColour(ping)
+	if (ping < 60) then
+		return RGB(3, 252, 98);
+	end;
+
+	if (ping < 100) then
+		return RGB(161, 252, 3);
+	end;
+
+	if (ping < 300) then
+		return RGB(252, 252, 38);
+	end;
+
+	if (ping < 500) then
+		return RGB(252, 166, 38);
+	end;
+
+	if (ping < 1000) then
+		return RGB(209, 47, 42);
+	end;
+
+	return RGB(107, 29, 27);
 end;
 
 function clListBoxCustomServerItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
