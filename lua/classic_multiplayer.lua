@@ -388,7 +388,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
         }
     );
 
-    --if (hasPassword) then
+    if (hasPassword) then
 	    local lockerIcon = getElementEX(
 	    	row,
 	        anchorR,
@@ -403,7 +403,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
 	            texture = 'classic/edit/lock.png'
 	        }
 	    );
-	-- end;
+	end;
 
 	local pingIcon = getElementEX(
     	row,
