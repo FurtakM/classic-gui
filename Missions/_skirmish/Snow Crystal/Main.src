@@ -1,0 +1,71 @@
+// Snie¿ny Kryszta³
+// Autor mapy: Nefarem
+// Oskrypotwa³: Serpent
+// Sand of Siberia 2014@
+// Last Update: 27-11-2020
+
+Starting
+begin
+ResetFog;
+
+CenterNowOnXY(61, 121);
+AnimateTrees(true);
+
+GameType;
+
+PrepareAmerican;
+
+if game_type = 2 then
+   PrepareRussian;
+
+GameStarted;
+End;
+
+
+// Licznik
+Every 0$01 trigger game_type do
+var sib, side;
+begin
+enable;
+
+     if game_type = 1 then
+        side := 1
+     else
+        side := 3;
+
+     sib := GetSibAmount(side);
+
+     if sib < 0 then
+        sib := 0;
+
+     display_strings := ['#tick', timer, '#sib', sib, need_to_win];
+
+     timer := timer + 0$01;
+
+End;
+
+
+// Muzyka
+Every 1 do
+begin
+
+     While(true) do
+     begin
+     music_nat := 1;
+     music_class := 5;
+
+     Wait(Rand(3$30, 5$00));
+
+     music_nat := [1,3][Rand(1,2)];
+     music_class := 0;
+
+     Wait(Rand(3$30, 5$00));
+
+     music_nat := [1,3][Rand(1,2)];
+     music_class := 0;
+
+     Wait(Rand(3$30, 5$00));
+     end;
+
+End;
+

@@ -860,7 +860,7 @@ end;
 
 function clHoverItem(ID, MODE, SELECTED)
     if (MODE == 1 and SELECTED == 0) then
-        setColour1({ID=ID}, RGB(219, 219, 219));
+        setColour1({ID=ID}, RGB(202, 224, 218));
     else
         if (SELECTED == 1) then
             setColour1({ID=ID}, RGB(191, 191, 191));
@@ -936,7 +936,7 @@ function clListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         }
     );
 
-    clSetListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK);    
+    clSetListItems(ELEMENT.list.scroll, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES);    
 
     return ELEMENT.list.scroll;
 end;
@@ -1091,11 +1091,23 @@ function clListBoxCustomItemUnselected(ROW_ID)
     setColour1({ID = ROW_ID}, WHITEA());
 end;
 
-function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
+function clSetListItemHover(ID, MODE, STATIC, INDEX, SELECTED_ITEM)
+    if (not STATIC) then
+        return 'clHoverItem(%id,' .. MODE .. ', ' .. BoolToInt(INDEX == SELECTED_ITEM) .. ');';
+    end;
+
+    return '';
+end;
+
+function clSetListItems(PARENT, ITEMS, SELECTED_ITEM, CALLBACK, PROPERTIES)
     sgui_deletechildren(PARENT.ID);
 
     local tmpCallback = CALLBACK;
     local tmpElement = {};
+
+    if (PROPERTIES.static == nil) then
+        PROPERTIES.static = false;
+    end;
 
     for i = 1, table.getn(ITEMS) do
         if (CALLBACK ~= '') then
@@ -1117,8 +1129,8 @@ function clSetListItems(PARENT, ITEMS, SELECTEDITEM, CALLBACK)
             true,
             {
                 colour1 = WHITEA(),
-                callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
-                callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(i == SELECTEDITEM) .. ');',
+                callback_mouseleave = clSetListItemHover('%id', 0, PROPERTIES.static, i, SELECTED_ITEM),
+                callback_mouseover = clSetListItemHover('%id', 1, PROPERTIES.static, i, SELECTED_ITEM),
                 callback_mousedown = tmpCallback,
             }
         );

@@ -1,0 +1,6 @@
+Export road, skill, cargos;
+Export Function InitSettings;
+begin
+Difficulty := GetMultiplayerSetting(0);
+SetRoad(GetMultiplayerSetting(1));
+End;

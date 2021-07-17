@@ -1,0 +1,61 @@
+// Polowanie na pojazdy
+// by Serpent
+// 14-06-2015
+
+Starting
+begin
+ResetFog;
+PrepareGame;
+PrepareUnits;
+End;
+
+
+// Ilosc mechanikow
+// Ilosc czasu na doprowadzenie pojazdu
+// Ilosc graczy
+// Bomba Syberytowa ;d
+
+Export mechanics, time_to_destroy, players, sib_bomb,
+       time, veh_amount;
+Export p1, p2, p3, p4, p5;
+Function PrepareGame;
+var debug, i;
+begin
+debug := false; // true - tryb testowy | false -
+
+      if debug then
+         begin
+         mechanics := 5;
+         time_to_destroy := 45; // not used!!!
+         players := 4;
+         sib_bomb := true;
+         time := 3$00;
+         FogOff(1);
+         end
+      else
+         begin
+
+         // domyslnie
+         time := 3$00;
+         players := 4;
+         sib_bomb := true;
+         mechanics := 4;
+
+         mechanics := [3, 4, 5][GetMultiplayerSetting(0)];
+         players := [3, 4, 5][GetMultiplayerSetting(1)];
+         time := [3$00, 5$00, 10$00][GetMultiplayerSetting(2)];
+         sib_bomb := GetMultiplayerSetting(3) - 1;
+         end;
+
+      p1 := 0;
+      p2 := 0;
+      p3 := 0;
+      p4 := 0;
+      p5 := 0;
+
+      veh_amount := 12;
+
+      for i = 1 to 7 do
+          ChangeSideFog(i, 8);
+
+End;

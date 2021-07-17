@@ -1,0 +1,40 @@
+// Operacja Gamma
+// 01-01-2015@
+// by Serpent
+
+Starting
+begin
+ResetFog;
+AnimateTrees(true);
+
+SetDifficulty(GetMultiplayerSetting(0));
+
+InGameOn;
+
+CenterNowOnXY(0, 0);
+
+RandomizeAll;
+DestroyTrash;
+ShowPath;
+
+RandMusic(1,3);
+
+PrepareAnimals([8,7,6][dif], 2, 3, nature);
+PrepareRussian;
+Action;
+PrepareAmerican;
+End;
+
+
+
+Every 2$00+1$0 do
+var i, bool;
+begin
+bool := Rand(false, true);
+
+if bool then
+   RandMusic(1,3);
+
+enable;
+End;
+        

@@ -111,13 +111,23 @@ menu.window_multiplayer.panel.serverList = clListBoxCustom(
 	XYWH(8, 504, 764, 215), 
 	{
 		added = 'clListBoxCustomServerItemNew(' .. BOX_SERVER .. ', %id, %rowid, %index, %data);',
-		updated = 'clListBoxCustomItemServerUpdate(' .. BOX_SERVER .. ', %rowid, %index, %data);',
-		selected = 'clListBoxCustomItemServerSelected(%rowid);',
-		unselected = 'clListBoxCustomItemServerUnselected(%rowid);'
+		updated = 'clListBoxCustomItemServerUpdate(' .. BOX_SERVER .. ', %rowid, %index, %data);'
 	},
 	{
 		texture = 'classic/edit/msservers_listbox.png'
 	}
+);
+
+-- player list on server
+menu.window_multiplayer.panel.playersList = clListBox(
+    menu.window_multiplayer.panel, 
+    XYWH(774, 504, 242, 215), 
+    {}, 
+    0, 
+    '', 
+    {
+        texture = 'classic/edit/msplayers_listbox.png'
+    }
 );
 
 -- bottom buttons
@@ -162,8 +172,10 @@ menu.window_multiplayer.panel.joinGame = clButton(
     184,
     30, 
     loc(TID_Multi_button_join_game), 
-    '',
-    {}
+    '', -- see: clickOnServer()
+    {
+        disabled = true
+    }
 );
 
 menu.window_multiplayer.panel.setIPAddr = clButton(
@@ -211,6 +223,10 @@ function FROMOW_MULTIPLAYER_MODCHANGE()
 	showMultiplayerWindow(0);
 end;
 
+function FROMOW_SERVER_PLAYERLIST(DATA)
+    displayServerPlayerList(DATA.PLAYERS);
+end;
+
 ----- functions -----
 function showMultiplayerGame() -- TODO
   	IN_LOBBY = false;	
@@ -234,6 +250,26 @@ function createMultiplayerGame()
 	--HideDialog(dialog.loadingMap);
 end;
 
+-- user select server
+function clickOnServer(ROW_ID, HAS_PASSWORD, INDEX) 
+    MULTIPLAYER_SERVER.Mode = 0;
+    MULTIPLAYER_SERVER.Index = INDEX;
+
+    local listItems = getChildren({ID=menu.window_multiplayer.panel.serverList.LIST.ID});
+
+    for i = 1, #listItems do
+        setColour1({ID=listItems[i].ID}, RGB(231, 222, 214));
+    end;
+
+    setEnabled(menu.window_multiplayer.panel.joinGame, true);
+    set_Callback(menu.window_multiplayer.panel.joinGame.ID, CALLBACK_MOUSECLICK, 'requestJoinToServer(' .. parseInt(HAS_PASSWORD) .. ',' .. INDEX .. ');');
+
+    setColour1({ID=ROW_ID}, RGB(191, 191, 191));
+
+    -- triggers FROMOW_SERVER_PLAYERLIST(DATA)
+    OW_LOBBY_SERVERLISTBOX_CLICK(CUSTOM_LISTBOX_LIST[BOX_SERVER][INDEX].ROOMID);
+end;
+
 -- join to server using item from servers list
 function requestJoinToServer(HAS_PASSWORD, INDEX)
 	MULTIPLAYER_SERVER.Mode = 0;
@@ -244,6 +280,11 @@ function requestJoinToServer(HAS_PASSWORD, INDEX)
 	else
 		joinToServer();
 	end;
+end;
+
+-- display list of players on current server
+function displayServerPlayerList(LIST)
+    clSetListItems(menu.window_multiplayer.panel.playersList, split(LIST, "\n"), 0, '', {static = true});
 end;
 
 -- join to server using `Enter IP prompt`
@@ -393,7 +434,7 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
 	    	row,
 	        anchorR,
 	        XYWH(
-	          getWidth(row) - 40,
+	          getWidth(row) - 60,
 	          3,
 	          11, 
 	          11
@@ -404,6 +445,23 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
 	        }
 	    );
 	end;
+
+    if (isDedicated) then
+        local dediIcon = getElementEX(
+            row,
+            anchorR,
+            XYWH(
+              getWidth(row) - 40,
+              3,
+              11, 
+              11
+            ),
+            true,
+            {
+                texture = 'classic/edit/dedi.png'
+            }
+        );
+    end;
 
 	local pingIcon = getElementEX(
     	row,
@@ -420,31 +478,32 @@ function generateMultiplayerServerData(ROW_ID, INDEX, DATA)
         }
     );
 
+    set_Callback(row.ID, CALLBACK_MOUSECLICK, 'clickOnServer(' .. ROW_ID .. ', ' .. parseInt(hasPassword) .. ', ' .. INDEX .. ');');
     set_Callback(row.ID, CALLBACK_MOUSEDBLCLICK, 'requestJoinToServer(' .. parseInt(hasPassword) .. ',' .. INDEX .. ');');
 end;
 
 function pingColour(ping)
 	if (ping < 60) then
-		return RGB(3, 252, 98);
+		return RGB(12, 112, 39);
 	end;
 
 	if (ping < 100) then
-		return RGB(161, 252, 3);
+		return RGB(56, 207, 116);
 	end;
 
 	if (ping < 300) then
-		return RGB(252, 252, 38);
+		return RGB(192, 201, 52);
 	end;
 
 	if (ping < 500) then
-		return RGB(252, 166, 38);
+		return RGB(201, 159, 52);
 	end;
 
 	if (ping < 1000) then
-		return RGB(209, 47, 42);
+		return RGB(201, 74, 52);
 	end;
 
-	return RGB(107, 29, 27);
+	return RGB(207, 17, 17);
 end;
 
 function clListBoxCustomServerItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
@@ -461,14 +520,6 @@ function clListBoxCustomItemServerUpdate(BOX_ID, ROW_ID, INDEX, DATA)
     generateMultiplayerServerData(ROW_ID, INDEX, DATA);
     
     CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
-end;
-
-function clListBoxCustomServerItemSelected(ROW_ID)
-    setColour1({ID = ROW_ID}, RGB(191, 191, 191));
-end;
-
-function clListBoxCustomServerItemUnselected(ROW_ID)
-    setColour1({ID = ROW_ID}, WHITEA());
 end;
 
 -- watch message input IRC

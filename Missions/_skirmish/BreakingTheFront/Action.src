@@ -1,0 +1,841 @@
+// Dialogs and mission objectives
+Export Function Action;
+var i, tmp;
+begin
+InGameOn;
+CenterNowOnXY(225, 217);
+
+for i in playerForces[2] do
+    begin
+
+    if playerForces[1] and GetClass(i) in [3, 4] then
+       begin
+       PlaceUnitInArea(playerForces[1][1], startArea, false);
+       PlaceHumanInUnit(i, playerForces[1][1]);
+       playerForces := Replace(playerForces, 1, Delete(playerForces[1], 1));
+       end
+    else
+       PlaceUnitInArea(i, startArea, false);
+    end;
+
+wait(0$2);
+
+// commander:
+// 1 - Ironside
+// 2 - Johnson
+// 3 - Stuart
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1');
+SayRadio(Powell, 'DP-1');
+SayRadio(Powell, 'DP-2');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2');
+
+InGameOff;
+
+ChangeMissionObjectives('O1');
+
+game := true;
+
+SaveForQuickRestart;
+
+wait(0$5);
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-3');
+
+repeat
+ wait(0$1);
+until ruEscape[1] >= ruEscape[2];
+
+outpostEscape := true;
+
+tmp := UnitFilter(ruOutpost, [f_sex, sex_male]);
+
+if tmp then
+   Say(tmp[1], 'DR-1-Escape');
+
+wait(0$1);
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Escape');
+
+for i in ruOutpost do
+    begin
+    if IsInUnit(i) then
+       ComExitBuilding(i);
+
+    AddComMoveXY(i, 179, 102);
+    AddComMoveXY(i, 28, 20);
+    end;
+
+tmp := [];
+
+repeat
+ wait(0$1);
+ tmp := UnitFilter(ruOutpost, [f_inarea, rus2Base]);
+
+ if tmp then
+    for i in tmp do
+        begin
+        ruOutpost := ruOutpost diff i;
+        mc_bases := ReplaceIn(mc_bases, [mc_rus_2, mc_bases[mc_rus_2] + 1], i);
+        end;
+until not UnitFilter(ruOutpost, [f_type, unit_human]);
+
+ruOutpost := [];
+End;
+
+// Boom
+Every 0$1 trigger outpostEscape do
+var i, tmp;
+begin
+wait(rand(0$25, 0$35));
+
+tmp := [ [208,166], [218,174], [201,173], [189,167], [191,160], [209,181], [192,162], [197,166] ];
+
+for i = 1 to 5+Difficulty do
+    begin
+    MineExplosion(tmp[i][1], tmp[i][2], 1);
+    wait(0$0.8);
+    end;
+End;
+
+
+// Simple oustpost script
+Every 0$3 trigger not outpostEscape do
+var tmp, engs, buildings, empty, i, j, k;
+begin
+enable;
+
+tmp := UnitFilter(ruOutpost, [[f_side, 3], [f_class, 1]]);
+engs := UnitFilter(ruOutpost, [[f_side, 3], [f_class, 2]]);
+buildings := UnitFilter(ruOutpost, [[f_side, 3], [f_type, unit_building], [f_not, [f_lives, 1000]]]);
+
+if engs and buildings then
+   begin
+   for i in engs do
+       if IsInUnit(i) then
+          ComExitBuilding(i)
+       else
+         if not HasTask(i) then
+            ComRepairBuilding(i, buildings[1]);
+   end
+else if not buildings and UnitFilter(ruOutpost, [f_btype, b_depot]) and UnitFilter(engs, [f_not, [f_inside]]) then
+     ComEnterUnit(UnitFilter(engs, [f_not, [f_inside]]), UnitFilter(ruOutpost, [f_btype, b_depot])[1]);
+
+
+if not tmp then
+   exit;
+
+if FilterUnitsInArea(ruOutpostCenterArea, [f_enemy, 3]) > 1 then
+   begin
+   for i in tmp do
+       begin
+       if IsInUnit(i) then
+          ComExitBuilding(i);
+
+          AddComAgressiveMove(i, 204, 164);
+       end;
+   end
+else if UnitFilter(tmp, [f_not, [f_inside]]) then
+   begin
+   empty := UnitFilter(ruOutpost, [[f_btype, b_bunker], [f_empty]]);
+
+   if not empty and UnitFilter(ruOutpost, [f_btype, b_barracks]) then
+      begin
+      ComEnterUnit(tmp, UnitFilter(ruOutpost, [f_btype, b_barracks])[1]);
+      exit;
+      end;
+
+   j := UnitFilter(tmp, [f_not, [f_inside]]);
+
+   if j < empty then
+      k := j
+   else
+      k := empty;
+
+   for i = 1 to k do
+       ComEnterUnit(j[i], empty[i]);
+   end;
+End;
+
+// Capture base
+Every 0$2 trigger GameType = 1 and outpostEscape and FilterAllUnits([[f_side, 1], [f_distxy, 208, 163, 8]]) and not FilterAllUnits([[f_side, 3], [f_type, unit_human], [f_distxy, 208, 163, 14]]) do
+var i;
+begin
+InGameOn;
+
+CenterNowOnUnits(playerCommander);
+wait(0$1);
+
+DialogueOn;
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-BaseCaptured');
+SayRadio(Powell, 'DP-1-BaseCaptured');
+
+if sibBombAllowed then
+   begin
+   Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2-BaseCaptured');
+
+   if commander = 1 then
+      SayRadio(Powell, 'DP-2b-BaseCaptured');
+
+   if commander = 2 then
+      SayRadio(Powell, 'DP-2-BaseCaptured');
+
+   if commander = 3 then
+      SayRadio(Powell, 'DP-2a-BaseCaptured');
+
+   Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-3-BaseCaptured');
+   end;
+
+DialogueOff;
+InGameOff;
+
+ChangeMissionObjectives('O2');
+
+for i in UnitFilter(ruOutpost, [f_type, unit_building]) do
+    SetSide(i, 1);
+
+baseCaptured := true;
+
+wait(0$35);
+
+PrepareReinforcements;
+End;
+
+// Powell alert about Russians
+Every 0$2 trigger FilterAllUnits([[f_side, 3], [f_distxy, 167, 197, 20]]) > 3 do
+SayRadio(Powell, 'DP-RuAttack');
+
+// Blockade spotted
+Every 0$2 trigger not debug and SeeXY(1, 168, 74) and GetEnvironmentType(168, 72) do
+begin
+CenterOnXY(168, 72);
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Blockade');
+End;
+
+// Spot Theta
+Every 0$2 trigger GameType = 1 and FilterAllUnits([[f_side, 1], [f_see, 4]]) do
+begin
+ChangeSideFog(4, 1);
+
+DialogueOn;
+
+CenterNowOnUnits(allyCommander);
+
+SayRadio(allyCommander, 'DM-1-Contact');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Contact');
+
+if commander = 1 then // Ironside
+   begin
+   SayRadio(allyCommander, 'DM-2-Contact');
+   Say(playerCommander, 'DI-2-Contact');
+
+   if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) and GetAttitude(8, 1) = att_enemy then
+      begin
+      SayRadio(allyCommander, 'DM-3-Contact');
+      Say(playerCommander, 'DI-3-Contact');
+      end;
+
+   SayRadio(allyCommander, 'DM-4-Contact');
+   Say(playerCommander, 'DI-4-Contact');
+   SayRadio(allyCommander, 'DM-5-Contact');
+   end;
+
+if commander = 2 then // Johnson
+   begin
+   SayRadio(allyCommander, 'DM-2c-Contact');
+   Say(playerCommander, 'DJ-2-Contact');
+
+   if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) and GetAttitude(8, 1) = att_enemy then
+      begin
+      SayRadio(allyCommander, 'DM-3-Contact');
+      Say(playerCommander, 'DJ-3-Contact');
+      end;
+
+   SayRadio(allyCommander, 'DM-4-Contact');
+   Say(playerCommander, 'DJ-4-Contact');
+   SayRadio(allyCommander, 'DM-5a-Contact');
+   end;
+
+if commander = 3 then // Stuart
+   begin
+   SayRadio(allyCommander, 'DM-2a-Contact');
+   Say(playerCommander, 'DS-2a-Contact');
+   SayRadio(allyCommander, 'DM-2b-Contact');
+   Say(playerCommander, 'DS-2b-Contact');
+
+   if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) and GetAttitude(8, 1) = att_enemy then
+      begin
+      SayRadio(allyCommander, 'DM-3-Contact');
+      Say(playerCommander, 'DS-3-Contact');
+      end;
+
+   SayRadio(allyCommander, 'DM-4-Contact');
+   Say(playerCommander, 'DS-4-Contact');
+   SayRadio(allyCommander, 'DM-5-Contact');
+   end;
+
+DialogueOff;
+
+ChangeMissionObjectives('O3');
+End;
+
+Every 0$10 trigger GameType = 1 and legDestCounter >= [15, 20, 25][Difficulty] and
+                   FilterAllUnits([[f_side, 8], [f_btype, b_warehouse]]) and
+                   FilterAllUnits([[f_side, 8], [f_type, unit_building]]) >= 5 do
+var time, sib, sources, i;
+begin
+DialogueOn;
+
+SayRadio(Farmer, 'DF-1-Leg');
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Leg');
+SayRadio(Farmer, 'DF-2-Leg');
+
+DialogueOff;
+
+Case Query('QLegionOffer') of
+1: ; // agree
+2: exit; // not agree
+end;
+
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-2-Leg');
+
+legOfferAccepted := true;
+
+SetAreaMapShow(legOfferArea, 1);
+CenterOnXY(190, 227);
+
+time := [8$00, 7$00, 6$00][Difficulty];
+sib := 100;
+
+disableGlobalTimer := true;
+
+repeat
+ wait(0$1);
+ time := time - 0$1;
+ sources := GetResourceArea(legOfferArea, mat_siberit);
+
+ display_strings := [
+                      '#SkrTime', tick,
+                      '#Skr-LegOffer', sib, time
+                    ];
+
+ if sources then
+    begin
+    sib := sib - sources * 10;
+    EraseResourceArea(legOfferArea, mat_siberit);
+    end;
+until time = 0$00 or sib <= 0 or not FilterAllUnits([f_side, 8]);
+
+SetAreaMapShow(legOfferArea, 0);
+disableGlobalTimer := false;
+
+if sib <= 0 then // legion change side
+   begin
+   legChangeSide := true;
+   SayRadio(Farmer, 'DF-4y-Leg');
+
+   ChangeMissionObjectives('O3a');
+
+   ChangeSideFog(8, 1);
+   SetAttitude(8, 1, att_friend, true);
+   SetAttitude(8, 4, att_friend, true);
+   SetAttitude(8, 6, att_enemy, true);
+   SetAttitude(8, 3, att_enemy, true);
+
+   wait(0$30);
+
+   PrepareLegionReinforcements;
+   end
+else
+   begin
+   ChangeMissionObjectives('O3a');
+
+   SayRadio(Farmer, 'DF-4n-Leg');
+   end;
+End;
+
+Every 0$1 trigger FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 and GetAttitude(8, 1) = att_enemy do
+ChangeMissionObjectives('O3a');
+
+// You Win
+Every 0$1 trigger GameType = 1 and game and FilterAllUnits([[f_side, 3], [f_type, unit_human]]) = 0 and
+                  FilterAllUnits([[f_side, 3], [f_btype, b_warehouse]]) = 0 do
+begin
+Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Win');
+
+if tick >= [150$0, 130$0, 110$0][Difficulty] then
+   AddMedal('med1', -1)
+else
+   AddMedal('med1', 1);
+
+if allyDestCounter >= [20, 15, 10][Difficulty] then
+   AddMedal('med2', -1)
+else
+   AddMedal('med2', 1);
+
+if GetAttitude(8, 1) = att_friend then
+   AddMedal('med3', 1)
+else if FilterAllUnits([[f_side, 8], [f_type, unit_human]]) = 0 then
+   AddMedal('med3', 2)
+else
+   AddMedal('med3', -1);
+
+GiveMedals('MAIN');
+
+YouWin;
+End;
+
+
+// Trigger explosion of static mines
+Every 10 trigger GameType = 1 and staticMines and FilterUnitsInArea(minesArea, [f_enemy, 8]) do
+var i, j, tmp, x, y;
+begin
+enable;
+
+tmp := FilterUnitsInArea(minesArea, [f_enemy, 8]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    x := GetX(i);
+    y := GetY(i);
+
+    if MineAtPos(x, y) then
+       begin
+       LaunchMineAtPos(x, y, 8);
+
+       if not dialogueMineDetected then
+          begin
+          CenterNowOnXY(x, y);
+          Say(playerCommander, 'D' & ['I', 'J', 'S'][commander] & '-1-Mine');
+          dialogueMineDetected := true;
+          end;
+
+       for j = 1 to staticMines do
+           if staticMines[j][1] = x and staticMines[j][2] = y then
+              begin
+              staticMines := Delete(staticMines, j);
+              break;
+              end;
+       end;
+    end;
+End;
+
+Every 30$00+50$00 trigger GameType = 1 and game and sibBombAllowed and UnitFilter(mc_bases[mc_rus_1], [f_btype, b_factory]) do
+var bomb, e;
+begin
+enable;
+
+MC_InsertProduceList(mc_rus_1, [[ru_heavy_wheeled, engine_siberite, control_computer, ru_siberium_rocket]]);
+
+repeat
+ wait(0$1);
+until FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]);
+
+bomb := FilterAllUnits([[f_side, 3], [f_weapon, ru_siberium_rocket]]);
+e := FilterAllUnits([[f_enemy, 3], [f_type, unit_building]]);
+
+if e then
+   e := NearestUnitToUnit(e, bomb[1]);
+
+ComAttackPlace(bomb, GetX(e), GetY(e));
+End;
+
+// Build behemoth
+Every 0$2 trigger Difficulty > 1 and UnitFilter(mc_bases[mc_rus_1], [f_class, 3]) and GameType = 1 and game and GetTech(tech_Behemoth, 3) = state_researched do
+var tmp, i;
+begin
+tmp := UnitFilter(mc_bases[mc_rus_1], [f_class, 3]);
+
+if not tmp then
+   exit;
+
+for i in tmp do
+    begin
+    SetTag(i, 29);
+    ComExitBuilding(i);
+    AddComBuildBehemoth(i, b_behemoth, 97, 133, 0);
+    end;
+
+wait(1$00);
+
+MC_Reset(mc_rus_1, 29);
+End;
+
+// Convoy
+Every 7$00 trigger GameType = 1 and GetBType(HexInfo(84, 128)) = b_warehouse and GetSide(HexInfo(84, 128)) = 3 do
+var veh, depot;
+begin
+enable;
+
+depot := HexInfo(84, 128);
+
+uc_side := 3;
+uc_nation := 3;
+
+PrepareVehicle(ru_medium_wheeled, engine_siberite, control_computer, ru_cargo_bay, 0);
+veh := CreateVehicle;
+
+PlaceUnitXY(veh, 126, 227, false);
+SetCargo(veh, mat_oil, 100);
+
+ComGive(veh, depot);
+AddComMoveXY(veh, 126, 227);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+until IsAt(veh, 126, 227);
+
+RemoveUnit(veh);
+End;
+
+// Convoy #2
+Every 9$00 trigger GameType = 1 and outpostEscape and commander = 2 do
+var veh, depot;
+begin
+enable;
+
+if tick >= [50$00, 40$00, 30$00][Difficulty] then
+   disable;
+
+uc_side := 4;
+uc_nation := 1;
+
+PrepareVehicle(us_medium_wheeled, engine_siberite, control_computer, us_cargo_bay, 0);
+veh := CreateVehicle;
+
+PlaceUnitXY(veh, 229, 226, false);
+SetCargo(veh, mat_cans, 100);
+
+AddComMoveToArea(veh, ruOutpostArea);
+AddComUnload(veh);
+AddComMoveXY(veh, 229, 226);
+
+wait(0$10);
+
+repeat
+ wait(0$1);
+until IsAt(veh, 229, 226);
+
+RemoveUnit(veh);
+End;
+
+Every 15$00 trigger GameType = 1 and game and reinforceAllowed do
+var i, j, veh, tmp, amount;
+begin
+enable;
+
+tmp := [];
+
+if commander = 1 then
+   amount := 3
+else
+   amount := 2;
+
+for i = 1 to amount do
+    begin
+    wait(0$5);
+
+    for j = 1 to 3 do
+        begin
+        uc_side := 4;
+        uc_nation := 1;
+
+        PrepareVehicle([us_medium_tracked, us_morphling][rand(1,2)], engine_siberite, control_computer, [us_laser, us_double_gun, us_rocket_launcher][rand(1,3)], 100);
+        veh := CreateVehicle;
+        tmp := tmp ^ veh;
+        PlaceUnitArea(veh, westSpawn, false);
+
+        ComMoveXY(veh, 119, 215);
+        end;
+    end;
+
+wait(0$3);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     if IsDead(i) then
+        tmp := tmp diff i
+     else
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 4]), i));
+until tmp = [];
+End;
+
+// oil
+Every 0$1 trigger GameType = 1 and game do
+var i, tmp;
+begin
+enable;
+
+tmp := FilterAllUnits([[f_not, [f_side, 1]], [f_engine, engine_combustion]]);
+
+if tmp then
+   for i in tmp do
+       if GetFuel(i) < 3 then
+          SetFuel(i, 3);
+End;
+
+
+// Attacks
+// Special legion attack from river
+Every 15$00 trigger game and GetAttitude(8, 4) = att_enemy do
+var i, un, tmp;
+begin
+enable;
+
+tmp := [];
+
+for i = 1 to 4 do
+    begin
+    uc_side := 8;
+    uc_nation := nation_arabian;
+
+    PrepareVehicle(ar_hovercraft, engine_combustion, control_apeman, [ar_double_machine_gun, ar_light_gun][rand(1,2)], rand(60, 80));
+    un := CreateVehicle;
+    SetDir(un, 2);
+
+    tmp := tmp ^ un;
+
+    PlaceUnitXY(un, 88, 2, false);
+    ComMoveXY(un, 93, 13);
+
+    wait(0$2);
+    end;
+
+for i in tmp do
+    AddComMoveXY(i, 136, 19);
+End;
+
+// Legion attacks Americans
+Every 7$30 + 7$30 trigger game do
+var i, base, tmp, target;
+begin
+enable;
+
+base := mc_leg;
+
+if not FilterAllUnits([[f_side, 8], [f_nation, 2], [f_btype, b_factory]]) then
+   exit;
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(base, [
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_rocket_launcher],
+      [ar_medium_trike, engine_combustion, control_remote, ar_flame_thrower],
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(base, [
+      [ar_medium_trike, engine_combustion, control_remote, [ar_gun, ar_flame_thrower, ar_flame_thrower][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_gun, ar_flame_thrower, ar_flame_thrower][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_flame_thrower, ar_flame_thrower, ar_selfpropelled_bomb][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, [ar_flame_thrower, ar_selfpropelled_bomb, ar_selfpropelled_bomb][rand(1,3)]],
+      [ar_medium_trike, engine_combustion, control_remote, ar_selfpropelled_bomb],
+      [ar_medium_trike, engine_combustion, control_remote, ar_flame_thrower],
+   ]);
+   end;
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= 6 or tick mod 10$00 = 0;
+
+wait(0$30);
+
+tmp := MC_GetVehicles(base, true);
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff tmp);
+
+target := rand(0, 2);
+
+if legChangeSide then
+   target := 2;
+
+if target = 2 then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 112, 64) > 9 then
+           ComMoveXY(i, 112, 64);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 112, 64, 9]) >= (tmp-1);
+   end
+else
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 174, 94) > 9 then
+           ComMoveXY(i, 174, 94);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 174, 94, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 8]), i))
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+
+// Russian attacks         
+Every 7$30 trigger game do
+var i, base, tmp, target, teleport;
+begin
+enable;
+
+if not UnitFilter(mc_bases[mc_rus_2], [[f_side, 3], [f_btype, b_factory]]) then
+   exit;
+
+base := mc_rus_2;
+teleport := FilterAllUnits([[f_side, 3], [f_btype, b_teleport]]);
+
+if Prob(40) then
+   begin
+   MC_InsertProduceList(base, [
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_medium_tracked, engine_siberite, control_computer, ru_time_lapser],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end
+else
+   begin
+   MC_InsertProduceList(base, [
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_rocket],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun],
+      [ru_heavy_tracked, engine_siberite, control_computer, ru_heavy_gun]
+   ]);
+   end;
+
+if Difficulty > 1 then
+   MC_InsertProduceList(base, [[ru_heavy_tracked, engine_siberite, control_computer, ru_rocket]]);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= [6, 7, 7][Difficulty] or tick mod 10$00 = 0;
+
+wait(0$45);
+
+tmp := MC_GetVehicles(base, true);
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff tmp);
+
+target := rand(0, 1);
+
+if target then
+   begin
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 84, 32) > 9 then
+           ComMoveXY(i, 84, 32);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 84, 32, 9]) >= (tmp-1);
+   end
+else
+   begin
+   if teleport then
+      ComEnterUnit(tmp, teleport[1]);
+
+   repeat
+    tmp := UnitFilter(tmp, [f_lives, 250]);
+
+    for i in tmp do
+        if GetDistUnitXY(i, 140, 219) > 9 and not HasTask(i) then
+           AddComMoveXY(i, 140, 219);
+
+    wait(0$1);
+   until UnitFilter(tmp, [f_distxy, 140, 219, 9]) >= (tmp-1);
+   end;
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        begin
+        if GetWeapon(i) = ru_time_lapser then
+           ComMoveUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i))
+        else
+           ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 3]), i));
+        end
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+
+// American attacks
+// Legion attacks Americans
+Every 12$30 + 11$30 trigger game do
+var i, base, tmp, target;
+begin
+enable;
+
+base := mc_amer;
+
+if not FilterAllUnits([[f_side, 4], [f_nation, 1], [f_btype, b_factory]]) then
+   exit;
+
+MC_InsertProduceList(base, [
+     [us_medium_tracked, engine_combustion, control_remote, us_double_gun],
+     [us_medium_tracked, engine_combustion, control_remote, us_laser],
+     [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher],
+     [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher],
+     [us_medium_tracked, engine_combustion, control_remote, us_rocket_launcher]
+]);
+
+repeat
+ wait(0$1);
+until MC_GetVehicles(base, true) >= 5 or tick mod 10$00 = 0;
+
+wait(0$30);
+
+tmp := MC_GetVehicles(base, true);
+mc_vehicles := Replace(mc_vehicles, base, mc_vehicles[base] diff tmp);
+
+repeat
+ wait(0$1);
+
+ for i in tmp do
+     begin
+     if GetLives(i) > 251 then
+        ComAttackUnit(i, NearestUnitToUnit(FilterAllUnits([f_enemy, 4]), i))
+     else
+      if IsDead(i) then
+         tmp := tmp diff i;
+     end;
+until not tmp;
+End;
+

@@ -1,0 +1,31 @@
+// Sand of Siberia
+// Potter's Paradox by Serpent
+// (Altar Interactive Old Notes)
+// Map by Morphid
+// 25-03-18
+
+Starting
+begin
+ResetFog;
+
+InitGame;
+
+PrepareLegion;
+PrepareAllies;
+
+Action;
+End;
+
+Function InitGame;
+begin
+RandomizeAll;
+
+Difficulty := GetMultiplayerSetting(0);
+
+if not Difficulty then
+   Difficulty := 2;
+
+InitVariables;
+SetDiplomacy;
+End;
+
