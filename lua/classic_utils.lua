@@ -7,6 +7,7 @@ TID_Main_Menu_User = 494;
 TID_Main_Menu_Play = 804;
 TID_Main_Menu_Skirmish = 539;
 TID_Main_Menu_Default = 419;
+TID_Main_Menu_Password = 1041;
 TID_Main_Menu_UsePassword = 1043;
 TID_Main_Menu_AllAchivs = 5000;
 TID_Main_Menu_SteamOverlay = 5001;
@@ -27,6 +28,7 @@ TID_Main_Menu_Mod_Old_Ver = 5015;
 TID_Main_Menu_Options_Switch_Interface = 5016;
 TID_Main_Menu_Back_To_Menu = 5017;
 TID_Main_Menu_Change_Name = 5018;
+TID_Main_Menu_Enter_IP = 5019;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -282,6 +284,10 @@ function stringToArray(str)
     end;
 
     return t;
+end;
+
+function setFocusID(ID)
+    setFocus({ID=ID});
 end;
 
 --keep this here untill it gets mereged into master utils

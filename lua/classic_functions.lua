@@ -1206,16 +1206,27 @@ function clPrompt(CALLBACK, PROPERTIES)
         PROPERTIES.text = '';
     end;
 
+    if (PROPERTIES.backgroundColor == nil) then
+        PROPERTIES.backgroundColor = BLACKA(50);
+    end;
+
+    if (PROPERTIES.texture == nil) then
+        PROPERTIES.texture = 'classic/edit/prompt.png';
+    end;
+
+    if (PROPERTIES.title ~= nil) then
+        PROPERTIES.texture = 'classic/edit/prompt_title.png';
+    end;
+
     local ELEMENT = getElementEX(
         nil,
         anchorLTRB,
         XYWH(0, 0, LayoutWidth, LayoutHeight),
         PROPERTIES.visible,
         {
-            colour1 = BLACKA(50)
+            colour1 = PROPERTIES.backgroundColor
         }
     );
-
     
     ELEMENT.prompt = getElementEX(
         ELEMENT, 
@@ -1223,9 +1234,23 @@ function clPrompt(CALLBACK, PROPERTIES)
         XYWH(LayoutWidth / 2 - 151, LayoutHeight / 2 - 48, 302, 96), 
         true,
         {
-            texture = 'classic/edit/prompt.png',
+            texture = PROPERTIES.texture,
         }
     );
+
+    if (PROPERTIES.title ~= nil) then
+        ELEMENT.title = getLabelEX(
+            ELEMENT.prompt,
+            anchorLTRB,
+            XYWH(6, 6, 298, 16),
+            nil,
+            PROPERTIES.title,
+            {
+                font_colour = BLACKA(255),
+                font_name = BankGotic_14
+            }
+        );
+    end;
 
     ELEMENT.prompt.input = getEditEX(
         ELEMENT.prompt,
@@ -1277,8 +1302,9 @@ end;
 
 function clOpenPrompt(ID, VALUE)
     setVisibleID(ID, true);
-	setFocus({ID = PROMPT_LIST[ID].INPUT});
-	if(value ~= nil) then
+	setFocusID(PROMPT_LIST[ID].INPUT);
+	
+    if (value ~= nil) then
 		setTextID(PROMPT_LIST[ID].INPUT, VALUE);
 	end;
 end;
@@ -1373,6 +1399,84 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         ELEMENT = ELEMENT,
         TEXTBOX = ELEMENT.textbox,
     };
+end;
+
+function clEditText(PARENT, ANCHOR, POSSIZE, PROPERTIES)
+    if (PROPERTIES.font == nil) then
+        PROPERTIES.font = BankGotic_14;
+    end;
+
+    if (PROPERTIES.text == nil) then
+        PROPERTIES.text = '';
+    end;
+
+    if (PROPERTIES.notAllowedChars == nil) then
+        PROPERTIES.notAllowedChars = '';
+    end;
+
+    if (PROPERTIES.fontColour == nil) then
+        PROPERTIES.fontColour = BLACKA(255);
+    end;
+
+    if (PROPERTIES.colour == nil) then
+        PROPERTIES.colour = WHITEA(255);
+    end;
+
+    if (PROPERTIES.fontDefaultColour == nil) then
+        PROPERTIES.fontDefaultColour = RGB(191, 191, 191);
+    end;
+
+    if (PROPERTIES.defaultText == nil) then
+        PROPERTIES.defaultText = '';
+    end;
+
+    if (PROPERTIES.colors == nil) then
+        PROPERTIES.colors = {};
+    end;
+
+    if (PROPERTIES.visible == nil) then
+        PROPERTIES.visible = true;
+    end;
+
+    if (PROPERTIES.disabled == nil) then
+        PROPERTIES.disabled = false;
+    end;
+
+    local ELEMENT = getEditEX(
+        PARENT, 
+        ANCHOR, 
+        POSSIZE,
+        PROPERTIES.font,
+        PROPERTIES.text,
+        PROPERTIES.notAllowedChars, 
+        PROPERTIES.colors,
+        {
+            font_colour = PROPERTIES.fontColour,
+            colour1 = PROPERTIES.colour,
+            visible = PROPERTIES.visible,
+            disabled = PROPERTIES.disabled
+        }  
+    );
+
+    if (strlen(PROPERTIES.defaultText) > 0) then
+        setVisible(ELEMENT, false);
+
+        local DEFAULT = getLabelEX(
+            PARENT,
+            anchorLTRB,
+            POSSIZE,
+            nil,
+            PROPERTIES.defaultText,
+            {
+                font_colour = PROPERTIES.fontDefaultColour,
+                font_name = PROPERTIES.font
+            }
+        ); 
+
+        set_Callback(DEFAULT.ID, CALLBACK_MOUSECLICK, 'setVisibleID(' .. DEFAULT.ID .. ', false); setVisibleID(' .. ELEMENT.ID .. ', true); setFocusID(' .. ELEMENT.ID .. ');');
+    end;
+
+    return ELEMENT;
 end;
 
 function filesInMod(mod, directory)

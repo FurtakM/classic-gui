@@ -191,7 +191,12 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
 
 menu.window_multiplayer.createServer = clCreateServerDialog(dialog.back, 'createMultiplayerGame()', '');
 menu.window_multiplayer.enterIP = clEnterIPDialog('clOpenPrompt(menu.window_multiplayer.enterPassword.ID, "")');
-menu.window_multiplayer.enterPassword = clPrompt('joinToServer();', {});
+menu.window_multiplayer.enterPassword = clPrompt(
+    'joinToServer();', {
+        backgroundColor = BLACKA(0),
+        title = loc(TID_Main_Menu_Password)
+    }
+);
 
 -- handlers
 function FROMOW_MULTIPLAYER_JOINFAILED(MESSAGE, STATUS)

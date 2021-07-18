@@ -115,10 +115,10 @@ function clCreateServerDialog(PARENT, AFTER_OK, AFTER_CANCEL)
 		'',
 		{},
 		{
-			font_colour = BLACKA(255);
+			font_colour = BLACKA(255),
 			colour = WHITEA(255),
-			disabled = true;
-			visible = true;
+			disabled = true,
+			visible = true
 		}
 	);
 
@@ -197,7 +197,7 @@ function clCreateServerDialog(PARENT, AFTER_OK, AFTER_CANCEL)
 end;
 
 function clEnterIPDialog(AFTER_OK) 
-		local ELEMENT = clPrompt(AFTER_OK, {});
+		local ELEMENT = clPrompt(AFTER_OK, {title = loc(TID_Main_Menu_Enter_IP)});
 
 		set_Property(ELEMENT.prompt.input.ID, PROP_INVALIDCHARS, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghifjlmnopqrstuvwxyz");
 		
