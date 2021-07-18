@@ -1304,7 +1304,7 @@ function clOpenPrompt(ID, VALUE)
     setVisibleID(ID, true);
 	setFocusID(PROMPT_LIST[ID].INPUT);
 	
-    if (value ~= nil) then
+    if (VALUE ~= nil) then
 		setTextID(PROMPT_LIST[ID].INPUT, VALUE);
 	end;
 end;

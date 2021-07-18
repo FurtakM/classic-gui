@@ -1,3 +1,6 @@
+include('classic_multiplayer_dialog');
+include('classic_multiplayer_room');
+
 -- constants & variables
 BOX_IRC = 0;
 BOX_SERVER = 1;
@@ -150,7 +153,7 @@ menu.window_multiplayer.panel.changeName = clButton(
     184,
     30, 
     loc(TID_Main_Menu_Change_Name), 
-    '',
+    'clOpenPrompt(menu.window_multiplayer.changePlayerName.ID, getPlayerName());',
     {}
 );
 
@@ -192,9 +195,16 @@ menu.window_multiplayer.panel.setIPAddr = clButton(
 menu.window_multiplayer.createServer = clCreateServerDialog(dialog.back, 'createMultiplayerGame()', '');
 menu.window_multiplayer.enterIP = clEnterIPDialog('clOpenPrompt(menu.window_multiplayer.enterPassword.ID, "")');
 menu.window_multiplayer.enterPassword = clPrompt(
-    'joinToServer();', {
+    'joinToServer();', 
+    {
         backgroundColor = BLACKA(0),
         title = loc(TID_Main_Menu_Password)
+    }
+);
+menu.window_multiplayer.changePlayerName = clPrompt(
+    'changePlayerName();',
+    {
+        title = loc(TID_Main_Menu_Change_Name)
     }
 );
 
@@ -233,10 +243,22 @@ function FROMOW_SERVER_PLAYERLIST(DATA)
 end;
 
 ----- functions -----
-function showMultiplayerGame() -- TODO
-  	IN_LOBBY = false;	
-	showMultiplayerWindow(0);
-	debug('MultiplayerRoom');
+function getPlayerName()
+    return OW_SETTING_READ_STRING("MP", "NAME", getvalue(OWV_USERNAME));
+end;
+
+function changePlayerName()
+    local nickName = getText(menu.window_multiplayer.changePlayerName.prompt.input);
+
+    if (nickName ~= "") then
+        OW_MULTIROOM_SET_MYNAME(nickName);
+        OW_SETTING_WRITE("MP", "NAME", nickName);
+    else
+        OW_MULTIROOM_SET_MYNAME(getvalue(OWV_USERNAME));
+        OW_SETTING_WRITE("MP", "NAME", getvalue(OWV_USERNAME));
+    end;
+
+    clClosePrompt(menu.window_multiplayer.changePlayerName.ID);
 end;
 
 function createMultiplayerGame()
@@ -246,13 +268,9 @@ function createMultiplayerGame()
 		passwdText = getText(menu.window_multiplayer.createServer.PASSWD);
 	end;
 
-	--ShowDialog(dialog.loadingMap);
-
 	if OW_ROOM_CREATE(getText(menu.window_multiplayer.createServer.SERVER), passwdText) then
 		showMultiplayerGame();
 	end;
-
-	--HideDialog(dialog.loadingMap);
 end;
 
 -- user select server
