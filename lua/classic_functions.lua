@@ -1049,14 +1049,13 @@ function clListBoxCustom(PARENT, POS, CALLBACKS, PROPERTIES)
 end;
 
 function clListBoxCustomItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
-
     local name = DATA.nick;
 
     if (name == nil) then
         name = DATA.name;
     end;
 
-    getLabelEX(
+    local label = getLabelEX(
         {ID = ROW_ID}, 
         anchorNone, 
         XYWH(0, 0, getWidthID(ROW_ID), getHeightID(ROW_ID)), 
@@ -1075,12 +1074,15 @@ function clListBoxCustomItemNew(BOX_ID, ID, ROW_ID, INDEX, DATA)
         CUSTOM_LISTBOX_LIST[BOX_ID] = {};
     end;
 
-    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = {
+        DATA = DATA,
+        LABEL = label.ID
+    }
 end;
 
 function clListBoxCustomItemUpdate(BOX_ID, ROW_ID, INDEX, DATA)
-    setTextID(ROW_ID, DATA.nick);
-    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX] = DATA; 
+    CUSTOM_LISTBOX_LIST[BOX_ID][INDEX].DATA = DATA; 
+    setTextID(CUSTOM_LISTBOX_LIST[BOX_ID][INDEX].LABEL, DATA.nick);
 end;
 
 function clListBoxCustomItemSelected(ROW_ID)
