@@ -29,6 +29,10 @@ TID_Main_Menu_Options_Switch_Interface = 5016;
 TID_Main_Menu_Back_To_Menu = 5017;
 TID_Main_Menu_Change_Name = 5018;
 TID_Main_Menu_Enter_IP = 5019;
+TID_Main_Menu_Filter_Achiv = 5020;
+TID_Main_Menu_Filter_Achiv_All = 5021;
+TID_Main_Menu_Filter_Achiv_Done = 5022;
+TID_Main_Menu_Filter_Achiv_Undone = 5023;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -154,6 +158,14 @@ function getAudioLanguages()
     }
 end;
 
+function getAchivFilter()
+    return {
+        loc(TID_Main_Menu_Filter_Achiv_All),
+        loc(TID_Main_Menu_Filter_Achiv_Done),
+        loc(TID_Main_Menu_Filter_Achiv_Undone)
+    };
+end;
+
 function setVisibleAll(ARRAY, MODE)
     local result = false;
 
@@ -224,7 +236,7 @@ function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
     for i = 1, #v1 do
         if (parseInt(v1[i]) < parseInt(v2[i])) then
             return false;
-        else if (parseInt(v1[i] > parseInt(v2[i]))) then
+        elseif (parseInt(v1[i]) > parseInt(v2[i])) then
             return true;
         end;
     end;
