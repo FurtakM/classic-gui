@@ -633,6 +633,10 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.visible = true;
     end;
 
+    if PROPERTIES.disabled == nil then
+        PROPERTIES.disabled = false;
+    end;
+
     local ELEMENT = getElementEX(
         PARENT, 
         anchorNone, 
@@ -640,6 +644,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.visible,
         {
             colour1 = WHITEA(),
+            disabled = PROPERTIES.disabled
         }
     );
 

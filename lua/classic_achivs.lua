@@ -4,19 +4,22 @@
 --]]
 ACHIV_CATEGORY = 0;
 ACHIV_FILTER = 0;
+ACHIV_FILTER_MISSION = 0;
+
+include('classic_achivs_filter');
 
 -- functions
 function showAchivs(mode)
     if mode > 0 then
         -- categories
-        achivCategoryclButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'displayAchivs(0, -1)', 0);
+        achivCategoryclButton(10, 30, loc(TID_Main_Menu_AllAchivs), 'changeCategory(' .. 0 .. ')', 0);
 
         -- achievsCategoryName = { [1] = loc(TID_Achievements_US), [2] = loc(TID_Achievements_AR), [3] = loc(TID_Achievements_RU), [4] = loc(TID_Achievements_Ally), [5] = loc(TID_Achievements_Leg), [6] = loc(TID_Achievements_ACamp), [7] = loc(TID_Achievements_MP), [8] = loc(TID_Achievements_Skir) ,[9] = loc
         for i = 1, table.getn(achievsCategoryName) do
-            achivCategoryclButton(10, 30 + i * 40, achievsCategoryName[i], 'displayAchivs(' .. i .. ', -1)', i);
+            achivCategoryclButton(10, 30 + i * 40, achievsCategoryName[i], 'changeCategory(' .. i .. ')', i);
         end;
 
-        displayAchivs(0, 0);
+        displayAchivs(0, 0, 0);
 
         showMenuButton(0);
         setVisible(menu.window_achivs, true);
@@ -26,7 +29,12 @@ function showAchivs(mode)
     end;
 end;
 
-function displayAchivs(category, filter)
+function changeCategory(category)
+    category = parseInt(category);
+    displayAchivs(category, -1, -1);
+end;
+
+function displayAchivs(category, filter, filterMission)
     local imgsize = 96;
 
     if (category == -1) then
@@ -41,8 +49,11 @@ function displayAchivs(category, filter)
         ACHIV_FILTER = filter;
     end;
 
-    -- 1 - done
-    -- 2 - undone
+    if (filterMission == -1) then
+        filterMission = ACHIV_FILTER_MISSION;
+    else
+        ACHIV_FILTER_MISSION = filterMission;
+    end;
 
     index = 0;
 
@@ -62,6 +73,10 @@ function displayAchivs(category, filter)
 
         if categoryCount > 0 then
             for j, k in pairs(achievsCategory[i]) do
+                if (ACHIV_FILTER_MISSION > 0) and (#ACHIV_FILTER_MISSION_LIST < i or (not inArray(ACHIV_FILTER_MISSION_LIST[i], k))) then
+                    goto continue;
+                end;
+
                 achieved = checkAchieved(k, true);
 
                 if (filter == 1 and (not achieved)) then -- done
@@ -282,7 +297,11 @@ function filterAchiv(MODE)
         return;
     end;
 
-    displayAchivs(-1, MODE - 1);
+    displayAchivs(-1, MODE - 1, -1);
+end;
+
+function filterAchivMission(MISSION)
+    displayAchivs(-1, -1, parseInt(MISSION) - 1);
 end;
 
 -- init achivs
@@ -329,6 +348,18 @@ menu.window_achivs.score.settings = clComboBox(
     getAchivFilter(),
     1,
     'filterAchiv("INDEX")',
+    {
+        hint = loc(TID_Main_Menu_Filter_Achiv)
+    }
+);
+
+menu.window_achivs.score.settings_mission = clComboBox(
+    menu.window_achivs.score,
+    266,
+    12,
+    getAchivFilterMission(),
+    1,
+    'filterAchivMission("INDEX")',
     {
         hint = loc(TID_Main_Menu_Filter_Achiv)
     }
@@ -407,7 +438,7 @@ menu.window_achivs.panel.scrollV = clScrollBarEX2(
 
 function updateAchievCounter(VALUE, TOTAL_VALUE)
     if (TOTAL_VALUE == 0) then
-        setText(menu.window_achivs.counter, '()');
+        setText(menu.window_achivs.counter, '0');
     elseif (ACHIV_FILTER > 0) then
         setText(menu.window_achivs.counter, TOTAL_VALUE);
     else
