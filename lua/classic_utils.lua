@@ -33,6 +33,7 @@ TID_Main_Menu_Filter_Achiv = 5020;
 TID_Main_Menu_Filter_Achiv_All = 5021;
 TID_Main_Menu_Filter_Achiv_Done = 5022;
 TID_Main_Menu_Filter_Achiv_Undone = 5023;
+TID_Main_Menu_Options_Sound_Label = 5024;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -158,6 +159,15 @@ function getAudioLanguages()
     }
 end;
 
+function getSubtitles()
+    return  {
+        loc(TID_Options_Subtitles_Off),
+        loc(TID_Options_Subtitles_Video),
+        loc(TID_Options_Subtitles_Audio),
+        loc(TID_Options_Subtitles_Both)
+    };
+end;
+
 function getAchivFilter()
     return {
         loc(TID_Main_Menu_Filter_Achiv_All),
@@ -246,15 +256,21 @@ function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
     local v2 = split(VERSION_TO_COMPARE, '.');
 
     for i = 1, #v1 do
-        if (parseInt(v1[i]) < parseInt(v2[i])) then
-            return false;
-        elseif (parseInt(v1[i]) > parseInt(v2[i])) then
-            return true;
+        if (parseInt(v1[i]) ~= parseInt(v2[i])) then
+            return (parseInt(v1[i]) > parseInt(v2[i]));
         end;
     end;
 
     return true;
 end;
+
+--[[function compareVersions(VERSION, VERSION_TO_COMPARE) -- #BOOL
+    if (not VERSION or not VERSION_TO_COMPARE) then
+        return true;
+    end;
+
+    return OW_VERSION_LOWER(VERSION_TO_COMPARE,VERSION) or OW_VERSION_SAME(VERSION_TO_COMPARE,VERSION);
+end;--]]
 
 function setCheckedID(ELEMENT_ID, VALUE)
     return sgui_set(ELEMENT_ID, PROP_CHECKED, VALUE);

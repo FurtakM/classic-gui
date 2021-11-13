@@ -32,6 +32,8 @@ OPTION_GRAPHICS_VSYNC = 16;
 OPTION_GRAPHICS_FPS = 17;
 OPTION_GRAPHICS_LIMITMOUSE = 18;
 OPTION_GAME_STANDGROUND = 19;
+OPTION_SOUND_VIDEO = 20;
+OPTION_SUBTITLES_BACKGROUND = 21;
 
 function getSetting(setting)
     if setting == OPTION_STEAMOVERLAY then
@@ -54,10 +56,6 @@ function getSetting(setting)
         return OW_get(SETTING_AUTOMISSION);
     end;
 
-    if setting == OPTION_GAME_SUBTITLES then
-        return OW_get(SETTING_SUBTITLES);
-    end;
-
     if setting == OPTION_GRAPHICS_GRAPH then
         return OW_SETTING_READ_BOOLEAN('DEBRIEF', 'OLD_GRAPH_TYPE', false);
     end;
@@ -76,6 +74,10 @@ function getSetting(setting)
 
     if setting == OPTION_SOUND_EFFECTS then
         return OW_settings_getvolume(VOLUME_EFFECTS);
+    end;
+
+    if setting == OPTION_SOUND_VIDEO then
+        return OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_VOLUME_VIDEO', 5000);
     end;
 
     if setting == OPTION_LANG_TEXT then
@@ -108,6 +110,10 @@ function getSetting(setting)
         end;
     end;
 
+    if setting == OPTION_GAME_SUBTITLES then
+       return OW_SETTING_READ_NUMBER('OPTIONS', 'SUBTITLES', 0);
+    end;
+
     if setting == OPTION_GRAPHICS_RESOLUTION then
         local keyResolution = OW_GET_RESOLUTION_LIST();
         local currentResolution = OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_RESOLUTION);
@@ -137,6 +143,10 @@ function getSetting(setting)
 
     if setting == OPTION_GAME_STANDGROUND then
         return OW_SPECIAL_SETTINGS_GET(SETTING_PERMSTANDGROUND);
+    end;
+
+    if setting == OPTION_SUBTITLES_BACKGROUND then
+        return OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_subBG', 127);
     end;
 end;
 
@@ -226,6 +236,16 @@ function saveSliderSetting(setting, value)
         sound.playOptions('Dialogs/Am/Exclamations/EX_CA-ARM-2.wav', VOLUME_SPEECH);
     end;
 
+    if setting == OPTION_SOUND_VIDEO then
+        OW_settings_setvolume(VOLUME_VIDEO, value);
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_VOLUME_VIDEO', value);
+    end;
+
+    if setting == OPTION_SUBTITLES_BACKGROUND then
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_subBG', value);
+        debug(value);
+    end;
+
     OW_settings_save();
 end;
 
@@ -249,6 +269,32 @@ function saveComboBoxSetting(setting, value)
         for i = 1, table.getn(keyLang) do
             if (value == lang[i]) then
                 OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_AUDIOLANG, keyLang[i]);
+                break;
+            end;
+        end;
+    end;
+
+    if setting == OPTION_GAME_SUBTITLES then
+        local subtitles = getSubtitles();
+
+        for i = 1, table.getn(subtitles) do
+            if (value == subtitles[i]) then
+                OW_SETTING_WRITE('OPTIONS', 'SUBTITLES', i);
+
+                if (i == 1) then
+                    OW_set(SETTING_SUBTITLES, true);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', true);
+                elseif (i == 2) then
+                    OW_set(SETTING_SUBTITLES, false);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLES', false);
+                elseif (i == 3) then
+                    OW_set(SETTING_SUBTITLESAUDIO, true);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', true);
+                else 
+                    OW_set(SETTING_SUBTITLESAUDIO, false);
+                    OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_SUBTITLESAUDIO', false);
+                end;
+
                 break;
             end;
         end;
@@ -317,10 +363,20 @@ menu.window_options.panel.accept = clButton(
 );
 
 -- SOUND
-menu.window_options.panel.sound_label = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.sound = getElementEX(
+    menu.window_options.panel, 
+    anchorLT, 
+    XYWH(8, 20, 242, 218), 
+    true,
+    {
+        colour1 = WHITEA(),
+    }
+);
+
+menu.window_options.panel.sound.title = getLabelEX(
+    menu.window_options.panel.sound,
     anchorLT,
-    XYWH(12, 19, 200, 16),
+    XYWH(4, 0, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Sound_Options),
     {
@@ -334,10 +390,10 @@ menu.window_options.panel.sound_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.music_label = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.sound.music_label = getLabelEX(
+    menu.window_options.panel.sound,
     anchorLT,
-    XYWH(14, 35, 200, 15),
+    XYWH(6, 16, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Music_Volume),
     {
@@ -352,23 +408,23 @@ menu.window_options.panel.music_label = getLabelEX(
 );
 
 
-menu.window_options.panel.music_slider = clSliderElement(
-    menu.window_options.panel, 
+menu.window_options.panel.sound.music_slider = clSliderElement(
+    menu.window_options.panel.sound, 
     anchorNone, 
-    XYWH(14, 51, 230, 15),
+    XYWH(6, 32, 230, 15),
     0,
     5000, 
     getSetting(OPTION_SOUND_MUSIC), 
-    'saveSliderSetting(OPTION_SOUND_MUSIC, menu.window_options.panel.music_slider.POS);',
+    'saveSliderSetting(' .. OPTION_SOUND_MUSIC .. ', menu.window_options.panel.sound.music_slider.POS);',
     {        
         hint = loc(TID_Options_Music_Volume_Desc)
     }
 );
 
-menu.window_options.panel.speech_label = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.sound.speech_label = getLabelEX(
+    menu.window_options.panel.sound,
     anchorLT,
-    XYWH(14, 69, 200, 15),
+    XYWH(6, 50, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Speech_Volume),
     {
@@ -383,23 +439,23 @@ menu.window_options.panel.speech_label = getLabelEX(
 );
 
 
-menu.window_options.panel.speech_slider = clSliderElement(
-    menu.window_options.panel, 
+menu.window_options.panel.sound.speech_slider = clSliderElement(
+    menu.window_options.panel.sound, 
     anchorNone, 
-    XYWH(14, 85, 230, 15),
+    XYWH(6, 66, 230, 15),
     0,
     5000, 
     getSetting(OPTION_SOUND_SPEECH), 
-    'saveSliderSetting(OPTION_SOUND_SPEECH, menu.window_options.panel.speech_slider.POS);',
+    'saveSliderSetting(' .. OPTION_SOUND_SPEECH .. ', menu.window_options.panel.sound.speech_slider.POS);',
     {        
         hint = loc(TID_Options_Speech_Volume_Desc)
     }
 );
 
-menu.window_options.panel.effects_label = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.sound.effects_label = getLabelEX(
+    menu.window_options.panel.sound,
     anchorLT,
-    XYWH(14, 103, 200, 15),
+    XYWH(6, 84, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Effects_Volume),
     {
@@ -413,24 +469,82 @@ menu.window_options.panel.effects_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.effects_slider = clSliderElement(
-    menu.window_options.panel, 
+menu.window_options.panel.sound.effects_slider = clSliderElement(
+    menu.window_options.panel.sound, 
     anchorNone, 
-    XYWH(14, 119, 230, 15),
+    XYWH(6, 100, 230, 15),
     0,
     5000, 
     getSetting(OPTION_SOUND_EFFECTS), 
-    'saveSliderSetting(OPTION_SOUND_EFFECTS, menu.window_options.panel.effects_slider.POS);',
+    'saveSliderSetting(' .. OPTION_SOUND_EFFECTS .. ', menu.window_options.panel.sound.effects_slider.POS);',
     {        
         hint = loc(TID_Options_Effects_Volume_Desc)
     }
 );
 
--- LANG
-menu.window_options.panel.lang_label = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.sound.video_label = getLabelEX(
+    menu.window_options.panel.sound,
     anchorLT,
-    XYWH(256, 19, 200, 16),
+    XYWH(6, 118, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_Video_Volume),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.sound.video_slider = clSliderElement(
+    menu.window_options.panel.sound, 
+    anchorNone, 
+    XYWH(6, 134, 230, 15),
+    0,
+    5000, 
+    getSetting(OPTION_SOUND_VIDEO), 
+    'saveSliderSetting(' .. OPTION_SOUND_VIDEO .. ', menu.window_options.panel.sound.video_slider.POS);',
+    {        
+        hint = loc(TID_Options_Video_Volume_Desc)
+    }
+);
+
+menu.window_options.panel.sound.desc = getLabelEX(
+    menu.window_options.panel.sound,
+    anchorLT,
+    XYWH(6, 184, 230, 32),
+    Tahoma_12, 
+    loc(TID_Main_Menu_Options_Sound_Label),
+    {
+        font_colour = RGB(254, 254, 254),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = true,
+        scissor = true
+    }
+);
+
+
+-- LANGUAGE
+menu.window_options.panel.language = getElementEX(
+    menu.window_options.panel, 
+    anchorLT, 
+    XYWH(256, 20, 242, 218), 
+    true,
+    {
+        colour1 = WHITEA(),
+    }
+);
+
+menu.window_options.panel.language.title = getLabelEX(
+    menu.window_options.panel.language,
+    anchorLT,
+    XYWH(4, 0, 200, 16),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Lang_Options),
     {
@@ -444,20 +558,10 @@ menu.window_options.panel.lang_label = getLabelEX(
     }
 );
 
-menu.window_options.panel.tlang = getElementEX(
-    menu.window_options.panel, 
-    anchorLT, 
-    XYWH(260, 35, 230, 30), 
-    true,
-    {
-        colour1 = WHITEA(),
-    }
-);
-
-menu.window_options.panel.tlang.label = getLabelEX(
-    menu.window_options.panel.tlang,
+menu.window_options.panel.language.game_label = getLabelEX(
+    menu.window_options.panel.language,
     anchorLT,
-    XYWH(4, 0, 200, 15),
+    XYWH(6, 16, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Lang_Text_Options),
     {
@@ -471,10 +575,10 @@ menu.window_options.panel.tlang.label = getLabelEX(
     }
 );
 
-menu.window_options.panel.tlang.listbox = clComboBox(
-    menu.window_options.panel.tlang,
-    0,
-    15,
+menu.window_options.panel.language.game_listbox = clComboBox(
+    menu.window_options.panel.language,
+    4,
+    30,
     getLanguages(),
     getSetting(OPTION_LANG_TEXT),
     'saveComboBoxSetting(' .. OPTION_LANG_TEXT .. ', "VALUE")',
@@ -486,20 +590,10 @@ menu.window_options.panel.tlang.listbox = clComboBox(
     }
 );
 
-menu.window_options.panel.alang = getElementEX(
-    menu.window_options.panel, 
-    anchorLT, 
-    XYWH(260, 72, 230, 30), 
-    true,
-    {
-        colour1 = WHITEA(),
-    }
-);
-
-menu.window_options.panel.alang.label = getLabelEX(
-    menu.window_options.panel.alang,
+menu.window_options.panel.language.audio_label = getLabelEX(
+    menu.window_options.panel.language,
     anchorLT,
-    XYWH(4, 0, 200, 15),
+    XYWH(6, 53, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Lang_Audio_Options),
     {
@@ -513,10 +607,10 @@ menu.window_options.panel.alang.label = getLabelEX(
     }
 );
 
-menu.window_options.panel.alang.listbox = clComboBox(
-    menu.window_options.panel.alang,
-    0,
-    15,
+menu.window_options.panel.language.audio_listbox = clComboBox(
+    menu.window_options.panel.language,
+    4,
+    67,
     getAudioLanguages(),
     getSetting(OPTION_LANG_AUDIO),
     'saveComboBoxSetting(' .. OPTION_LANG_AUDIO .. ', "VALUE")',
@@ -528,334 +622,10 @@ menu.window_options.panel.alang.listbox = clComboBox(
     }
 );
 
-menu.window_options.panel.lang_desc = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.language.subtitles_label = getLabelEX(
+    menu.window_options.panel.language,
     anchorLT,
-    XYWH(264, 204, 200, 10),
-    Tahoma_12, 
-    loc(TID_Main_Menu_Options_Lang_Label),
-    {
-        font_colour = RGB(254, 254, 254),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = true,
-        scissor = true
-    }
-);
-
-
--- GRAPHICS
-menu.window_options.panel.graphics_label = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(506, 19, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Graphics_Options),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
---[[
-menu.window_options.panel.graphics_graph_checkbox = clCheckbox(
-    menu.window_options.panel,
-    512,
-    41,
-    'changeSetting(%id, ' .. OPTION_GRAPHICS_GRAPH .. ')',
-    {
-        checked = getSetting(OPTION_GRAPHICS_GRAPH),
-        hint = loc(TID_Options_TypeGraphs_Desc)
-    }
-);
-
-menu.window_options.panel.graphics_grap = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 40, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Old_Type_Graph_Short),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.grap_label = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(509, 64, 230, 15),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Transparency_Fill_Short),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true,
-    }
-);
-
-
-menu.window_options.panel.graph_slider = clSliderElement(
-    menu.window_options.panel, 
-    anchorNone, 
-    XYWH(509, 80, 230, 15),
-    0,
-    25, 
-    getSetting(OPTION_GRAPHICS_GRAPH_TRANS), 
-    'saveSliderSetting(OPTION_GRAPHICS_GRAPH_TRANS, menu.window_options.panel.graph_slider.POS);',
-    {
-        hint = loc(TID_Options_Transparency_Fill_Desc)
-    }
-);--]]
-
-menu.window_options.panel.graphics_windowed_checkbox = clCheckbox(
-    menu.window_options.panel,
-    512, 
-    41,
-    'changeSetting(%id, ' .. OPTION_GRAPHICS_WINDOWED .. ')',
-    {
-        checked = getSetting(OPTION_GRAPHICS_WINDOWED),
-        hint = loc(TID_Options_Windowed_Desc)
-    }
-);
-
-menu.window_options.panel.graphics_windowed_label = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 40, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Graphics_Windowed),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.resolution = getElementEX(
-    menu.window_options.panel, 
-    anchorLT, 
-    XYWH(507, 138, 230, 30), 
-    true,
-    {
-        colour1 = WHITEA(),
-    }
-);
-
-menu.window_options.panel.resolution.label = getLabelEX(
-    menu.window_options.panel.resolution,
-    anchorLT,
-    XYWH(4, 0, 200, 15),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Graphics_Resolution),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.resolution.listbox = clComboBox(
-    menu.window_options.panel.resolution,
-    0,
-    15,
-    OW_GET_RESOLUTION_LIST(),
-    getSetting(OPTION_GRAPHICS_RESOLUTION),
-    'saveComboBoxSetting(' .. OPTION_GRAPHICS_RESOLUTION .. ', "VALUE")',
-    {
-        texture = 'classic/edit/combobox-small-opt.png',
-        textureButton = 'classic/edit/combobox-small-button-opt.png',
-        textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
-        hint = loc(TID_Options_Res_Desc)
-    }
-);
-
-menu.window_options.panel.graphics_fps = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 214, 200, 16),
-    BankGotic_14, 
-    loc(TID_Options_FPSCounter),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = falsel,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.graphics_fps_checkbox = clCheckbox(
-    menu.window_options.panel,
-    512,
-    215,
-    'changeSetting(%id, ' .. OPTION_GRAPHICS_FPS .. ')',
-    {
-        checked = getSetting(OPTION_GRAPHICS_FPS),
-        hint = loc(TID_Options_FPSCounter_Desc)
-    }
-);
-
-menu.window_options.panel.graphics_vsync = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 239, 200, 16),
-    BankGotic_14, 
-    loc(TID_Options_Vsync),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.graphics_vsync_checkbox = clCheckbox(
-    menu.window_options.panel,
-    512,
-    240,
-    'changeSetting(%id, ' .. OPTION_GRAPHICS_VSYNC .. ')',
-    {
-        checked = getSetting(OPTION_GRAPHICS_VSYNC),
-        hint = loc(TID_Options_Vsync_Desc)
-    }
-);
-
-menu.window_options.panel.graphics_limited_mouse_label = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 264, 200, 16),
-    BankGotic_14, 
-    loc(TID_Options_LockCursor),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.graphics_limited_mouse_checkbox = clCheckbox(
-    menu.window_options.panel,
-    512,
-    265,
-    'changeSetting(%id, ' .. OPTION_GRAPHICS_LIMITMOUSE .. ')',
-    {
-        checked = getSetting(OPTION_GRAPHICS_LIMITMOUSE),
-        hint = loc(TID_Options_LockCursor_Desc)
-    }
-);
-
-menu.window_options.panel.game_steamoverlay = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 289, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_SteamOverlay),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-
-menu.window_options.panel.game_steamoverlay_checkbox = clCheckbox(
-    menu.window_options.panel,
-    512,
-    290,
-    'changeSetting(%id, ' .. OPTION_STEAMOVERLAY .. ')',
-    {
-        checked = getSetting(OPTION_STEAMOVERLAY)
-    }
-);
-
-menu.window_options.panel.game_steamoverlay = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(531, 289, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_SteamOverlay),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
--- GAME
-menu.window_options.panel.game_label = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(12, 304, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Game_Options),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
-menu.window_options.panel.game_subtitles_checkbox = clCheckbox(
-    menu.window_options.panel,
-    17,
-    360,
-    'changeSetting(%id, ' .. OPTION_GAME_SUBTITLES .. ')',
-    {
-        checked = getSetting(OPTION_GAME_SUBTITLES),
-        hint = loc(TID_Options_Subtitles_Desc)
-    }
-);
-
-menu.window_options.panel.game_subtitles = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(36, 359, 200, 16),
+    XYWH(6, 90, 200, 15),
     BankGotic_14, 
     loc(TID_Main_Menu_Options_Subtitles),
     {
@@ -869,22 +639,27 @@ menu.window_options.panel.game_subtitles = getLabelEX(
     }
 );
 
-menu.window_options.panel.game_objectives_checkbox = clCheckbox(
-    menu.window_options.panel,
-    17,
-    385,
-    'changeSetting(%id, ' .. OPTION_GAME_OBJECTIVES .. ')',
+menu.window_options.panel.language.subtitles_listbox = clComboBox(
+    menu.window_options.panel.language,
+    4,
+    104,
+    getSubtitles(),
+    getSetting(OPTION_GAME_SUBTITLES),
+    'saveComboBoxSetting(' .. OPTION_GAME_SUBTITLES .. ', "VALUE")',
     {
-        checked = getSetting(OPTION_GAME_OBJECTIVES),
+        texture = 'classic/edit/combobox-small-opt.png',
+        textureButton = 'classic/edit/combobox-small-button-opt.png',
+        textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
+        hint = loc(TID_Options_Subtitles_Desc)
     }
 );
 
-menu.window_options.panel.game_objectives = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.language.subtitles_background_label = getLabelEX(
+    menu.window_options.panel.language,
     anchorLT,
-    XYWH(36, 384, 200, 16),
+    XYWH(6, 126, 200, 15),
     BankGotic_14, 
-    loc(TID_Main_Menu_Options_Auto_Objectives),
+    loc(TID_Options_SubtitlesBG),
     {
         font_colour = RGB(0, 0, 0),
         shadowtext = false,
@@ -896,58 +671,25 @@ menu.window_options.panel.game_objectives = getLabelEX(
     }
 );
 
-menu.window_options.panel.game_hold_ground = clCheckbox(
-    menu.window_options.panel,
-    17,
-    410,
-    'changeSetting(%id, ' .. OPTION_GAME_STANDGROUND .. ')',
-    {
-        checked = getSetting(OPTION_GAME_STANDGROUND),
-        hint = loc(TID_Options_HoldMode_Desc)
+menu.window_options.panel.language.subtitles_background_slider = clSliderElement(
+    menu.window_options.panel.language, 
+    anchorNone, 
+    XYWH(6, 142, 230, 15),
+    0,
+    255, 
+    getSetting(OPTION_SUBTITLES_BACKGROUND), 
+    'saveSliderSetting(' .. OPTION_SUBTITLES_BACKGROUND .. ', menu.window_options.panel.language.subtitles_background_slider.POS);',
+    {        
+        hint = loc(TID_Options_SubtitlesBG_Desc)
     }
 );
 
-menu.window_options.panel.game_hold_ground_desc = getLabelEX(
-    menu.window_options.panel,
+menu.window_options.panel.language.desc = getLabelEX(
+    menu.window_options.panel.language,
     anchorLT,
-    XYWH(36, 409, 200, 16),
-    BankGotic_14, 
-    loc(TID_Options_HoldMode),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
-
--- BEHAVIOUR
-menu.window_options.panel.behaviour_label = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(260, 304, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Units_Behaviour),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true,
-    }
-);
-
-menu.window_options.panel.behaviour_desc = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(264, 322, 224, 27),
+    XYWH(6, 184, 230, 32),
     Tahoma_12, 
-    loc(TID_Main_Menu_Options_Units_Behaviour_Label),
+    loc(TID_Main_Menu_Options_Lang_Label),
     {
         font_colour = RGB(254, 254, 254),
         shadowtext = false,
@@ -959,89 +701,50 @@ menu.window_options.panel.behaviour_desc = getLabelEX(
     }
 );
 
-menu.window_options.panel.behaviour_wounded_checkbox = clCheckbox(
-    menu.window_options.panel,
-    265,
-    360,
-    'changeSetting(%id, ' .. OPTION_BEHAV_WOUNDED .. ')',
+-- GRAPHICS
+menu.window_options.panel.graphics = getElementEX(
+    menu.window_options.panel, 
+    anchorLT, 
+    XYWH(502, 20, 242, 218), 
+    true,
     {
-        checked = getSetting(OPTION_BEHAV_WOUNDED),
-        hint = loc(TID_Options_Wounded_Desc)
+        colour1 = WHITEA(),
     }
 );
 
-menu.window_options.panel.behaviour_wounded = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(284, 359, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Wounded),
+-- CONTROLS
+menu.window_options.panel.controls = getElementEX(
+    menu.window_options.panel, 
+    anchorLT, 
+    XYWH(8, 242, 242, 192), 
+    true,
     {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
+        colour1 = WHITEA(),
     }
 );
 
-menu.window_options.panel.behaviour_noncombat_checkbox = clCheckbox(
-    menu.window_options.panel,
-    265,
-    385,
-    'changeSetting(%id, ' .. OPTION_BEHAV_NONCOMBAT .. ')',
+-- GAME
+menu.window_options.panel.game = getElementEX(
+    menu.window_options.panel, 
+    anchorLT, 
+    XYWH(256, 242, 242, 192), 
+    true,
     {
-        checked = getSetting(OPTION_BEHAV_NONCOMBAT),
-        hint = loc(TID_Options_NonSoldiers_Desc)
+        colour1 = WHITEA(),
     }
 );
 
-menu.window_options.panel.behaviour_noncombat = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(284, 384, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_NonSoldiers),
+-- INTERFACE
+menu.window_options.panel.interface = getElementEX(
+    menu.window_options.panel, 
+    anchorLT, 
+    XYWH(502, 242, 242, 192), 
+    true,
     {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
+        colour1 = WHITEA(),
     }
 );
 
-menu.window_options.panel.behaviour_vehicles_checkbox = clCheckbox(
-    menu.window_options.panel,
-    265,
-    410,
-    'changeSetting(%id, ' .. OPTION_BEHAV_VEHICLES .. ')',
-    {
-        checked = getSetting(OPTION_BEHAV_VEHICLES),
-        hint = loc(TID_Options_Vehicles_Desc)
-    }
-);
-
-menu.window_options.panel.behaviour_vehicles = getLabelEX(
-    menu.window_options.panel,
-    anchorLT,
-    XYWH(284, 409, 200, 16),
-    BankGotic_14, 
-    loc(TID_Main_Menu_Options_Vehicles),
-    {
-        font_colour = RGB(0, 0, 0),
-        shadowtext = false,
-        nomouseevent = true,
-        text_halign = ALIGN_LEFT,
-        text_valign = ALIGN_TOP,
-        wordwrap = false,
-        scissor = true
-    }
-);
 
 function showOptions(mode)
     if mode > 0 then
