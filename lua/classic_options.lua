@@ -14,10 +14,10 @@ SETTING_PERMSTANDGROUND=8;
 --]]
 
 OPTION_STEAMOVERLAY = 1;
-OPTION_BEHAV_WOUNDED = 2;
-OPTION_BEHAV_NONCOMBAT = 3;
-OPTION_BEHAV_VEHICLES = 4;
-OPTION_GAME_OBJECTIVES = 5;
+OPTION_GAME_WOUNDED = 2;
+OPTION_GAME_NONCOMBAT = 3;
+OPTION_GAME_VEHICLES = 4;
+OPTION_INTERFACE_OBJECTIVES = 5;
 OPTION_GAME_SUBTITLES = 6;
 OPTION_GRAPHICS_GRAPH = 7;
 OPTION_GRAPHICS_GRAPH_TRANS = 8;
@@ -29,30 +29,34 @@ OPTION_LANG_AUDIO = 13;
 OPTION_GRAPHICS_RESOLUTION = 14;
 OPTION_GRAPHICS_WINDOWED = 15;
 OPTION_GRAPHICS_VSYNC = 16;
-OPTION_GRAPHICS_FPS = 17;
-OPTION_GRAPHICS_LIMITMOUSE = 18;
+OPTION_INTERFACE_FPS = 17;
+OPTION_CONTROLS_LIMITMOUSE = 18;
 OPTION_GAME_STANDGROUND = 19;
 OPTION_SOUND_VIDEO = 20;
 OPTION_SUBTITLES_BACKGROUND = 21;
+OPTION_GRAPHICS_MONITOR = 22;
+OPTION_CONTROLS_PING = 23;
+OPTION_GAME_LOCKSPEED = 24;
+OPTION_INTERFACE_FACTORY = 25;
 
 function getSetting(setting)
     if setting == OPTION_STEAMOVERLAY then
         return OW_SETTING_READ_BOOLEAN('OPTIONS', 'OPTION_STEAMOVERLAY', true);
     end;
 
-    if setting == OPTION_BEHAV_WOUNDED then
+    if setting == OPTION_GAME_WOUNDED then
         return OW_get(SETTING_RAWOUNDED);
     end;
 
-    if setting == OPTION_BEHAV_NONCOMBAT then
+    if setting == OPTION_GAME_NONCOMBAT then
         return OW_get(SETTING_RANONCOMBAT);
     end;
 
-    if setting == OPTION_BEHAV_VEHICLES then
+    if setting == OPTION_GAME_VEHICLES then
         return OW_get(SETTING_RAVEHICLES);
     end;
 
-    if setting == OPTION_GAME_OBJECTIVES then
+    if setting == OPTION_INTERFACE_OBJECTIVES then
         return OW_get(SETTING_AUTOMISSION);
     end;
 
@@ -78,6 +82,10 @@ function getSetting(setting)
 
     if setting == OPTION_SOUND_VIDEO then
         return OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_VOLUME_VIDEO', 5000);
+    end;
+
+    if setting == OPTION_GRAPHICS_MONITOR then
+        return 1;
     end;
 
     if setting == OPTION_LANG_TEXT then
@@ -126,18 +134,18 @@ function getSetting(setting)
     end;
 
     if setting == OPTION_GRAPHICS_WINDOWED then
-        return OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_WINDOWED);
+        return (OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_WINDOWED) and 2 or 1);
     end;
 
     if setting == OPTION_GRAPHICS_VSYNC then
         return OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_VSYNC);
     end;
 
-    if setting == OPTION_GRAPHICS_FPS then
+    if setting == OPTION_INTERFACE_FPS then
         return OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_FPS);
     end;
 
-    if setting == OPTION_GRAPHICS_LIMITMOUSE then
+    if setting == OPTION_CONTROLS_LIMITMOUSE then
         return OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_LIMITMOUSE);
     end;
 
@@ -147,6 +155,18 @@ function getSetting(setting)
 
     if setting == OPTION_SUBTITLES_BACKGROUND then
         return OW_GSETTING_READ_NUMBER(getvalue(OWV_PROFILENAME), 'GS_subBG', 127);
+    end;
+
+    if setting == OPTION_CONTROLS_PING then
+        return OW_GSETTING_READ_BOOLEAN(getvalue(OWV_PROFILENAME), 'GS_pingMode', false);
+    end;
+
+    if setting == OPTION_GAME_LOCKSPEED then
+        return OW_get(SETTING_USEGAMESPEEDLOCK);
+    end;
+
+    if setting == OPTION_INTERFACE_FACTORY then
+        return OW_GSETTING_READ_BOOLEAN(getvalue(OWV_PROFILENAME), 'GS_altFact', false);
     end;
 end;
 
@@ -158,20 +178,20 @@ function changeSetting(id, setting)
         OW_SETTING_WRITE('OPTIONS', 'OPTION_STEAMOVERLAY', (not value));
     end;
 
-    if setting == OPTION_BEHAV_WOUNDED then
-        value = getSetting(OPTION_BEHAV_WOUNDED);
+    if setting == OPTION_GAME_WOUNDED then
+        value = getSetting(OPTION_GAME_WOUNDED);
         OW_set(SETTING_RAWOUNDED, (not value));
         OW_settings_save();
     end;
 
-    if setting == OPTION_BEHAV_NONCOMBAT then
-        value = getSetting(OPTION_BEHAV_NONCOMBAT);
+    if setting == OPTION_GAME_NONCOMBAT then
+        value = getSetting(OPTION_GAME_NONCOMBAT);
         OW_set(SETTING_RANONCOMBAT, (not value));
         OW_settings_save();
     end;
 
-    if setting == OPTION_BEHAV_VEHICLES then
-        value = getSetting(OPTION_BEHAV_VEHICLES);
+    if setting == OPTION_GAME_VEHICLES then
+        value = getSetting(OPTION_GAME_VEHICLES);
         OW_set(SETTING_RAVEHICLES, (not value));
         OW_settings_save();
     end;
@@ -182,8 +202,8 @@ function changeSetting(id, setting)
         OW_settings_save();
     end;
 
-    if setting == OPTION_GAME_OBJECTIVES then
-        value = getSetting(OPTION_GAME_OBJECTIVES);
+    if setting == OPTION_INTERFACE_OBJECTIVES then
+        value = getSetting(OPTION_INTERFACE_OBJECTIVES);
         OW_set(SETTING_AUTOMISSION, (not value));
         OW_settings_save();
     end;
@@ -193,24 +213,34 @@ function changeSetting(id, setting)
         OW_SETTING_WRITE('DEBRIEF', 'OLD_GRAPH_TYPE', (not value));
     end;
 
-    if setting == OPTION_GRAPHICS_WINDOWED then
-        OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_WINDOWED, (not OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_WINDOWED)));
-    end;
-
     if setting == OPTION_GRAPHICS_VSYNC then
         OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_VSYNC, (not OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_VSYNC)));
     end;
 
-    if setting == OPTION_GRAPHICS_FPS then
+    if setting == OPTION_INTERFACE_FPS then
         OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_FPS, (not OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_FPS)));
     end;
 
-    if setting == OPTION_GRAPHICS_LIMITMOUSE then
+    if setting == OPTION_CONTROLS_LIMITMOUSE then
         OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_LIMITMOUSE, (not OW_SPECIAL_SETTINGS_GET(SETTING_SPECIAL_LIMITMOUSE)));
     end;
 
     if setting == OPTION_GAME_STANDGROUND then
         OW_SPECIAL_SETTINGS_SET(SETTING_PERMSTANDGROUND, (not OW_SPECIAL_SETTINGS_GET(SETTING_PERMSTANDGROUND)));
+    end;
+
+    if setting == OPTION_CONTROLS_PING then
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_pingMode', (not OW_GSETTING_READ_BOOLEAN(getvalue(OWV_PROFILENAME), 'GS_pingMode', false)));
+    end;
+
+    if setting == OPTION_GAME_LOCKSPEED then
+        local value = OW_get(SETTING_USEGAMESPEEDLOCK);
+        OW_set(SETTING_USEGAMESPEEDLOCK, (not value));
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_USEGAMESPEEDLOCK', (not value));
+    end;
+
+    if setting == OPTION_INTERFACE_FACTORY then
+        OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_altFact', (not OW_GSETTING_READ_BOOLEAN(getvalue(OWV_PROFILENAME), 'GS_altFact', false)));
     end;
 end;
 
@@ -243,7 +273,6 @@ function saveSliderSetting(setting, value)
 
     if setting == OPTION_SUBTITLES_BACKGROUND then
         OW_GSETTING_WRITE(getvalue(OWV_PROFILENAME), 'GS_subBG', value);
-        debug(value);
     end;
 
     OW_settings_save();
@@ -302,6 +331,16 @@ function saveComboBoxSetting(setting, value)
 
     if setting == OPTION_GRAPHICS_RESOLUTION then
         OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_RESOLUTION, value);
+    end;
+
+    if setting == OPTION_GRAPHICS_WINDOWED then
+        local windowed = getWindowedList();
+
+        for i = 1, table.getn(windowed) do
+            if (value == windowed[i]) then
+                OW_SPECIAL_SETTINGS_SET(SETTING_SPECIAL_WINDOWED, (i >= 2) and true or false);
+            end;
+        end;
     end;
 end;
 
@@ -712,14 +751,264 @@ menu.window_options.panel.graphics = getElementEX(
     }
 );
 
+menu.window_options.panel.graphics.title = getLabelEX(
+    menu.window_options.panel.graphics,
+    anchorLT,
+    XYWH(4, 0, 200, 16),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Graphics_Options),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.graphics.vsync_checkbox = clCheckbox(
+    menu.window_options.panel.graphics,
+    10,
+    21,
+    'changeSetting(%id, ' .. OPTION_GRAPHICS_VSYNC .. ')',
+    {
+        checked = getSetting(OPTION_GRAPHICS_VSYNC),
+        hint = loc(TID_Options_Vsync_Desc)
+    }
+);
+
+menu.window_options.panel.graphics.vsync_label = getLabelEX(
+    menu.window_options.panel.graphics,
+    anchorLT,
+    XYWH(31, 20, 200, 16),
+    BankGotic_14, 
+    loc(TID_Options_Vsync),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.graphics.resolution_listbox = clComboBox(
+    menu.window_options.panel.graphics,
+    5,
+    59,
+    OW_GET_RESOLUTION_LIST(),
+    getSetting(OPTION_GRAPHICS_RESOLUTION),
+    'saveComboBoxSetting(' .. OPTION_GRAPHICS_RESOLUTION .. ', "VALUE")',
+    {
+        texture = 'classic/edit/combobox-small-opt.png',
+        textureButton = 'classic/edit/combobox-small-button-opt.png',
+        textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
+        hint = loc(TID_Options_Res_Desc)
+    }
+);
+
+menu.window_options.panel.graphics.resolution_label = getLabelEX(
+    menu.window_options.panel.graphics,
+    anchorLT,
+    XYWH(9, 44, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Graphics_Resolution),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.graphics.windowed_listbox = clComboBox(
+    menu.window_options.panel.graphics,
+    5,
+    96,
+    getWindowedList(),
+    getSetting(OPTION_GRAPHICS_WINDOWED),
+    'saveComboBoxSetting(' .. OPTION_GRAPHICS_WINDOWED .. ', "VALUE")',
+    {
+        texture = 'classic/edit/combobox-small-opt.png',
+        textureButton = 'classic/edit/combobox-small-button-opt.png',
+        textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
+        hint = loc(TID_Options_Windowed_Desc)
+    }
+);
+
+menu.window_options.panel.graphics.windowed_label = getLabelEX(
+    menu.window_options.panel.graphics,
+    anchorLT,
+    XYWH(9, 82, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_Windowed),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.graphics.monitor_listbox = clComboBox(
+    menu.window_options.panel.graphics,
+    5,
+    132,
+    {loc(TID_Main_Menu_Options_Main_Screen)},
+    getSetting(OPTION_GRAPHICS_MONITOR),
+    'saveComboBoxSetting(' .. OPTION_GRAPHICS_MONITOR .. ', "VALUE")',
+    {
+        texture = 'classic/edit/combobox-small-opt.png',
+        textureButton = 'classic/edit/combobox-small-button-opt.png',
+        textureButtonClick = 'classic/edit/combobox-small-button-click-opt.png',
+        hint = loc(TID_Options_Amonitor_Desc),
+        disabled = true
+    }
+);
+
+menu.window_options.panel.graphics.monitor_label = getLabelEX(
+    menu.window_options.panel.graphics,
+    anchorLT,
+    XYWH(9, 118, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_Amonitor),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.graphics.desc = getLabelEX(
+    menu.window_options.panel.graphics,
+    anchorLT,
+    XYWH(6, 184, 230, 32),
+    Tahoma_12, 
+    loc(TID_Main_Menu_Options_Graphics_Label),
+    {
+        font_colour = RGB(254, 254, 254),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = true,
+        scissor = true
+    }
+);
+
+
 -- CONTROLS
 menu.window_options.panel.controls = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(8, 242, 242, 192), 
+    XYWH(8, 240, 242, 192), 
     true,
     {
         colour1 = WHITEA(),
+    }
+);
+
+menu.window_options.panel.controls.desc = getLabelEX(
+    menu.window_options.panel.controls,
+    anchorLT,
+    XYWH(6, 18, 230, 32),
+    Tahoma_12, 
+    loc(TID_Main_Menu_Options_Controls_Label),
+    {
+        font_colour = RGB(254, 254, 254),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = true,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.controls.title = getLabelEX(
+    menu.window_options.panel.controls,
+    anchorLT,
+    XYWH(4, 0, 200, 16),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Controls_Options),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.controls.cursor = clCheckbox(
+    menu.window_options.panel.controls,
+    9,
+    55,
+    'changeSetting(%id, ' .. OPTION_CONTROLS_LIMITMOUSE .. ')',
+    {
+        checked = getSetting(OPTION_CONTROLS_LIMITMOUSE),
+        hint = loc(TID_Options_LockCursor_Desc)
+    }
+);
+
+menu.window_options.panel.controls.cursor_label = getLabelEX(
+    menu.window_options.panel.controls,
+    anchorLT,
+    XYWH(31, 54, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_LockCursor),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.controls.ping = clCheckbox(
+    menu.window_options.panel.controls,
+    9,
+    80,
+    'changeSetting(%id, ' .. OPTION_CONTROLS_PING .. ')',
+    {
+        checked = getSetting(OPTION_CONTROLS_PING),
+        hint = loc(TID_Options_PingMode_Desc)
+    }
+);
+
+menu.window_options.panel.controls.ping_label = getLabelEX(
+    menu.window_options.panel.controls,
+    anchorLT,
+    XYWH(31, 79, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_PingMode),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
     }
 );
 
@@ -727,10 +1016,184 @@ menu.window_options.panel.controls = getElementEX(
 menu.window_options.panel.game = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(256, 242, 242, 192), 
+    XYWH(256, 240, 242, 192), 
     true,
     {
         colour1 = WHITEA(),
+    }
+);
+
+menu.window_options.panel.game.title = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(4, 0, 200, 16),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Game_Options),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.desc = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(6, 18, 230, 32),
+    Tahoma_12, 
+    loc(TID_Main_Menu_Options_Game_Label),
+    {
+        font_colour = RGB(254, 254, 254),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = true,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.noncombat = clCheckbox(
+    menu.window_options.panel.game,
+    9,
+    55,
+    'changeSetting(%id, ' .. OPTION_GAME_NONCOMBAT .. ')',
+    {
+        checked = getSetting(OPTION_GAME_NONCOMBAT),
+        hint = loc(TID_Options_NonSoldiers_Desc)
+    }
+);
+
+menu.window_options.panel.game.noncombat_desc = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(31, 54, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Game_NonCombat),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.wounded = clCheckbox(
+    menu.window_options.panel.game,
+    9,
+    80,
+    'changeSetting(%id, ' .. OPTION_GAME_WOUNDED .. ')',
+    {
+        checked = getSetting(OPTION_GAME_WOUNDED),
+        hint = loc(TID_Options_Wounded_Desc)
+    }
+);
+
+menu.window_options.panel.game.wounded_desc = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(31, 79, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Game_Wounded),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.vehicles = clCheckbox(
+    menu.window_options.panel.game,
+    9,
+    105,
+    'changeSetting(%id, ' .. OPTION_GAME_VEHICLES .. ')',
+    {
+        checked = getSetting(OPTION_GAME_VEHICLES),
+        hint = loc(TID_Options_Vehicles_Desc)
+    }
+);
+
+menu.window_options.panel.game.vehicles_desc = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(31, 104, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Game_Vehicles),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.stand_ground = clCheckbox(
+    menu.window_options.panel.game,
+    9,
+    144,
+    'changeSetting(%id, ' .. OPTION_GAME_STANDGROUND .. ')',
+    {
+        checked = getSetting(OPTION_GAME_STANDGROUND),
+        hint = loc(TID_Options_HoldMode_Desc)
+    }
+);
+
+menu.window_options.panel.game.stand_ground_label = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(31, 143, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Game_HoldGround),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.lock_speed = clCheckbox(
+    menu.window_options.panel.game,
+    9,
+    169,
+    'changeSetting(%id, ' .. OPTION_GAME_LOCKSPEED .. ')',
+    {
+        checked = getSetting(OPTION_GAME_LOCKSPEED),
+        hint = loc(TID_Options_SpeedLock_Desc)
+    }
+);
+
+menu.window_options.panel.game.lock_speed_label = getLabelEX(
+    menu.window_options.panel.game,
+    anchorLT,
+    XYWH(31, 168, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_SpeedLock),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
     }
 );
 
@@ -738,10 +1201,184 @@ menu.window_options.panel.game = getElementEX(
 menu.window_options.panel.interface = getElementEX(
     menu.window_options.panel, 
     anchorLT, 
-    XYWH(502, 242, 242, 192), 
+    XYWH(503, 240, 242, 192), 
     true,
     {
         colour1 = WHITEA(),
+    }
+);
+
+menu.window_options.panel.interface.title = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(4, 0, 200, 16),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Interface_Options),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.interface.desc = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(6, 18, 230, 32),
+    Tahoma_12, 
+    loc(TID_Main_Menu_Options_Interface_Label),
+    {
+        font_colour = RGB(254, 254, 254),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = true,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.interface.objectives = clCheckbox(
+    menu.window_options.panel.interface,
+    9,
+    55,
+    'changeSetting(%id, ' .. OPTION_INTERFACE_OBJECTIVES .. ')',
+    {
+        checked = getSetting(OPTION_INTERFACE_OBJECTIVES),
+        hint = loc(TID_Main_Menu_Options_Objectives_Desc)
+    }
+);
+
+menu.window_options.panel.interface.objectives_desc = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(31, 54, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Auto_Objectives),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.interface.fps = clCheckbox(
+    menu.window_options.panel.interface,
+    9,
+    80,
+    'changeSetting(%id, ' .. OPTION_INTERFACE_FPS .. ')',
+    {
+        checked = getSetting(OPTION_INTERFACE_FPS),
+        hint = loc(TID_Options_FPSCounter_Desc)
+    }
+);
+
+menu.window_options.panel.interface.fps_desc = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(31, 79, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_FPSCounter),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.interface.graph = clCheckbox(
+    menu.window_options.panel.interface,
+    9,
+    105,
+    'changeSetting(%id, ' .. OPTION_GRAPHICS_GRAPH .. ')',
+    {
+        checked = getSetting(OPTION_GRAPHICS_GRAPH),
+        hint = loc(TID_Options_TypeGraphs_Desc)
+    }
+);
+
+menu.window_options.panel.interface.graph_desc = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(31, 104, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_Options_Old_Type_Graph_Short),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.interface.steam = clCheckbox(
+    menu.window_options.panel.interface,
+    9,
+    144,
+    'changeSetting(%id, ' .. OPTION_STEAMOVERLAY .. ')',
+    {
+        checked = getSetting(OPTION_STEAMOVERLAY),
+        hint = loc(TID_Main_Menu_SteamOverlay_Desc)
+    }
+);
+
+menu.window_options.panel.interface.steam_desc = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(31, 143, 200, 15),
+    BankGotic_14, 
+    loc(TID_Main_Menu_SteamOverlay),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
+    }
+);
+
+menu.window_options.panel.game.factory = clCheckbox(
+    menu.window_options.panel.interface,
+    9,
+    169,
+    'changeSetting(%id, ' .. OPTION_INTERFACE_FACTORY .. ')',
+    {
+        checked = getSetting(OPTION_INTERFACE_FACTORY),
+        hint = loc(TID_Options_AltFact_Desc)
+    }
+);
+
+menu.window_options.panel.game.factory_label = getLabelEX(
+    menu.window_options.panel.interface,
+    anchorLT,
+    XYWH(31, 168, 200, 15),
+    BankGotic_14, 
+    loc(TID_Options_AltFact),
+    {
+        font_colour = RGB(0, 0, 0),
+        shadowtext = false,
+        nomouseevent = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        wordwrap = false,
+        scissor = true
     }
 );
 
