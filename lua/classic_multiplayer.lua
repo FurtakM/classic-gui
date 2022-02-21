@@ -1,5 +1,4 @@
 include('classic_multiplayer_dialog');
-include('classic_multiplayer_room');
 
 -- constants & variables
 BOX_IRC = 0;
@@ -623,3 +622,5 @@ OW_UI_SET_LOBBY_SERVERLISTBOX(menu.window_multiplayer.panel.serverList.LIST.ID);
 -- callback
 -- send request for server list
 regTickCallback('updateServersList();');
+
+include('classic_multiplayer_room');

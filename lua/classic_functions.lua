@@ -1352,7 +1352,13 @@ function clTextBox(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
     return getElementEX(PARENT, ANCHOR, POSSIZE, true, PROPERTIES);
 end;
 
-function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
+function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES, CALLBACKS)
+    if (CALLBACKS == nil) then
+        CALLBACKS = {
+            added = ''
+        };
+    end;
+
     if (PROPERTIES.visible == nil) then
         PROPERTIES.visible = true;
     end;
@@ -1399,7 +1405,8 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         {
             font_name = PROPERTIES.font_name,
             font_colour = PROPERTIES.font_colour,
-            texture = PROPERTIES.texture
+            texture = PROPERTIES.texture,
+            callback_itemadded = CALLBACKS.added
         }
     );
 

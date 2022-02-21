@@ -47,6 +47,7 @@ TID_Main_Menu_Options_Interface_Options = 5034;
 TID_Main_Menu_Options_Interface_Label = 5035;
 TID_Main_Menu_Options_Objectives_Desc = 5036;
 TID_Main_Menu_SteamOverlay_Desc = 5037;
+TID_Main_Menu_ChangeAvatar = 5038;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -361,3 +362,7 @@ function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
 
 	return runstring(str);
 end;
+
+function trim(s)
+   return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
