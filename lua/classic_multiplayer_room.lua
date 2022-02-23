@@ -1,5 +1,6 @@
 MULTIPLAYER_ROOM_DATA = {};
 MULTIPLAYER_ROOM_MAP_DATA = {};
+MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
 
 menu.window_multiplayer_room = getElementEX(
     menu, 
@@ -63,13 +64,13 @@ menu.window_multiplayer_room.panel.start = clButton(
 menu.window_multiplayer_room.panel.mapName = getLabelEX(
     menu.window_multiplayer_room.panel,
     anchorLTRB,
-    XYWH(12, 16, 326, 28),
+    XYWH(12, 16, 326, 29),
     nil,
     loc(TID_InGame_NoName) .. '-' .. loc(TID_InGame_NoName), -- game name + game type,
     {
     	font_colour = BLACK(),
         nomouseevent = true,
-        font_name = BankGotic_14,
+        font_name = ADMUI3L,
         scissor = true,
         wordwrap = false
     }
@@ -78,13 +79,13 @@ menu.window_multiplayer_room.panel.mapName = getLabelEX(
 menu.window_multiplayer_room.panel.mapCount = getLabelEX(
     menu.window_multiplayer_room.panel,
     anchorR,
-    XYWH(342, 16, 50, 28),
+    XYWH(342, 16, 50, 29),
     nil,
     '12/12',
     {
     	font_colour = BLACK(),
         nomouseevent = true,
-        font_name = BankGotic_14,
+        font_name = ADMUI3L,
         scissor = true,
         wordwrap = false,
         text_halign = ALIGN_RIGHT
@@ -94,13 +95,13 @@ menu.window_multiplayer_room.panel.mapCount = getLabelEX(
 menu.window_multiplayer_room.panel.playerName = getLabelEX(
     menu.window_multiplayer_room.panel,
     anchorLTRB,
-    XYWH(18, 48, 152, 14),
+    XYWH(18, 48, 150, 14),
     nil,
     '', -- see showMultiplayerGame()
     {
     	font_colour = BLACK(),
         nomouseevent = true,
-        font_name = BankGotic_14,
+        font_name = ADMUI3L,
         scissor = true
     }
 ); 
@@ -108,13 +109,13 @@ menu.window_multiplayer_room.panel.playerName = getLabelEX(
 menu.window_multiplayer_room.panel.status = getLabelEX(
     menu.window_multiplayer_room.panel,
     anchorLTRB,
-    XYWH(12, 168, 372, 28),
+    XYWH(12, 170, 372, 28),
     nil,
     '',
     {
     	font_colour = BLACK(),
         nomouseevent = true,
-        font_name = BankGotic_14,
+        font_name = ADMUI3L,
         scissor = true,
         wordwrap = true
     }
@@ -139,7 +140,7 @@ menu.window_multiplayer_room.panel.chatInput = getEditEX(
     menu.window_multiplayer_room.panel,
     anchorNone,
     XYWH(420, 208, 578, 14),
-    BankGotic_14,
+    ADMUI3L,
     '',
     '',
     {},
@@ -152,19 +153,181 @@ menu.window_multiplayer_room.panel.chatInput = getEditEX(
 
 textBoxTest = clTextBox(nil, anchorLTRB, XYWH(1, 1, 1, 1), 'test', {});
 
-function sendChatMessage(key)
-	if key == VK_ENTER then
-		OW_MULTI_SENDALLCHATMSG(getText(menu.window_multiplayer_room.panel.chatInput), '#000000'); -- getHexColour(SIDE_COLOURS[Players[MyID].Colour+1]));
-		setText(menu.window_multiplayer_room.panel.chatInput, '');
-	end;
-end;
+-- lower panel
+menu.window_multiplayer_room.panel.page1Button = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		7, 
+		244,
+		60,
+		26
+	),
+	true,
+	{
+		texture = 'classic/edit/multiroom/zalozka-players-on.png',
+		callback_mousedown = 'multiRoomChangePage(1);'
+	}
+);
 
+menu.window_multiplayer_room.panel.page2Button = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		67, 
+		244,
+		60,
+		26
+	),
+	true,
+	{
+		texture = 'classic/edit/multiroom/zalozka-options-off.png',
+		callback_mousedown = 'multiRoomChangePage(2);'
+	}
+);
+
+menu.window_multiplayer_room.panel.page3Button = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		127, 
+		244,
+		60,
+		26
+	),
+	true,
+	{
+		texture = 'classic/edit/multiroom/zalozka-map-off.png',
+		callback_mousedown = 'multiRoomChangePage(3);'
+	}
+);
+
+menu.window_multiplayer_room.panel.page4Button = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		187, 
+		244,
+		60,
+		26
+	),
+	true,
+	{
+		texture = 'classic/edit/multiroom/zalozka-servers-off.png',
+		callback_mousedown = 'multiRoomChangePage(4);'
+	}
+);
+
+-- players page
+menu.window_multiplayer_room.panel.page1 = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		7, 
+		266,
+		1011,
+		490
+	),
+	true,
+	{
+		texture = 'classic/edit/multiroom/page.png'
+	}
+);
+
+-- game settings page
+menu.window_multiplayer_room.panel.page2 = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		7, 
+		266,
+		1011,
+		490
+	),
+	false,
+	{
+		texture = 'classic/edit/multiroom/page.png'
+	}
+);
+
+-- map page
+menu.window_multiplayer_room.panel.page3 = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		7, 
+		266,
+		1011,
+		490
+	),
+	false,
+	{
+		texture = 'classic/edit/multiroom/page.png'
+	}
+);
+
+-- other servers page
+menu.window_multiplayer_room.panel.page4 = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		7, 
+		266,
+		1011,
+		490
+	),
+	false,
+	{
+		texture = 'classic/edit/multiroom/page.png'
+	}
+);
+
+-- events
 OW_ROOM_SETUP(menu.window_multiplayer_room.panel.chat.TEXTBOX.ID, textBoxTest.ID, menu.window_multiplayer_room.panel.status.ID);
 
 function FROMOW_MULTIROOM_GET_MAP_INFO_CALLBACK(DATA)
-	MULTIPLAYER_ROOM_DATA.TeamDef = Data.TEAMDEF;
-	MULTIPLAYER_ROOM_DATA.SideDef = Data.SIDEDEF;
-	MULTIPLAYER_ROOM_DATA.MaxPlayers = getMaxMinPlayers(MULTIPLAYER_ROOM_DATA.TeamDef, MULTIPLAYER_ROOM_DATA.SideDef);
+--[[
+DATA Breakdown
+    MULTIMAP Breakdown
+        GAMETYPE      Integer
+        DESCRIPTION      WideString
+        RULES      WideString
+        RANDOMNATIONS      Boolean
+        ADDCOMPBUTTON     Boolean
+        CANSPEC       Boolean
+        MAPPARAMCOUNT     Integer
+        RESTRICTTECH       Boolean
+        RESTRICTBUILDINGS       Boolean
+
+        MAPPARAMS [1..MAPPARAMCOUNT] of
+            COUNT     Integer
+            VALUE      default
+            ITEMS of
+                NAMES [1..COUNT] of WideString
+                HINTS [1..COUNT] of WideString
+            HINTS [1..2] of WideString
+
+    TEAMDEF[1..9] of            1 isn't team
+        NAME    String                without name isn't avalible         1 hasn't name
+        SIDESMIN    Integer
+        SIDESMAX    Integer
+        ASSIGNED_POSITIONS[1..8] of Boolean
+        ASSIGNED_POSITIONS_COUNT    Integer
+
+    SIDEDEF[1..8] of
+        NAME    String
+        ENABLED    Boolean
+        NATIONS of
+            AR    Boolean
+            US    Boolean
+            RU    Boolean 
+--]]
+
+	MULTIPLAYER_ROOM_DATA = DATA;
+	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
+	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
+
+	-- generate map settings
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -205,27 +368,39 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 	setText(menu.window_multiplayer_room.panel.mapName, trim(MULTIPLAYER_ROOM_MAP_DATA.MAPLOC) .. ' - ' .. trim(MULTIPLAYER_ROOM_MAP_DATA.GAMETYPELOC));
 
 	-- get map info data
-  	-- OW_MULTIROOM_GET_CURRENT_MAP_INFO();
+  	OW_MULTIROOM_GET_CURRENT_MAP_INFO();
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
-	debug('FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS');
+	--debug('FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS');
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
-	debug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
+	--debug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
 end;
 
 function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
-	debug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
+	--debug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
     hideMultiplayerGame();
 end;
 
+function FROMOW_MULTI_PINGED(DATA)
+
+end;
+
+function FROMOW_MULTIROOM_CONSTATUS_UPDATE(DATA)
+
+end;
+
+function FROMOW_SGUI_RESTART() -- Called just before SGUI is restarted
+	-- MULTIROOM_FREEAVATARS();
+end;
+
 function FROMOW_MULTIROOM_CONNSTATUS_NOTJOINED() -- Called by OW
-	hideMultiplayerGame()
+	hideMultiplayerGame();
 end;
 
 function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
@@ -233,6 +408,8 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
     OW_IRC_DESTROY();
 end;
 
+
+-- main functions
 function showMultiplayerGame()
   	IN_LOBBY = false;	
   	setVisible(menu.window_multiplayer, false);
@@ -252,6 +429,95 @@ function hideMultiplayerGame()
   	setVisible(menu.window_multiplayer, true);
 end;
 
+function sendChatMessage(key)
+	if key == VK_ENTER then
+		OW_MULTI_SENDALLCHATMSG(getText(menu.window_multiplayer_room.panel.chatInput), '#000000'); -- getHexColour(SIDE_COLOURS[Players[MyID].Colour+1]));
+		setText(menu.window_multiplayer_room.panel.chatInput, '');
+		return;
+	end;
+
+	if key == VK_ESC then
+		setText(menu.window_multiplayer_room.panel.chatInput, '');
+		return;
+	end;
+end;
+
+function multiRoomChangePage(page)
+	local textures = {
+		'zalozka-players-',
+		'zalozka-options-',
+		'zalozka-map-',
+		'zalozka-servers-'
+	};
+
+	local pages = {
+		{
+			button = menu.window_multiplayer_room.panel.page1Button.ID,
+			page = menu.window_multiplayer_room.panel.page1.ID
+		},
+		{
+			button = menu.window_multiplayer_room.panel.page2Button.ID,
+			page = menu.window_multiplayer_room.panel.page2.ID
+		},
+		{
+			button = menu.window_multiplayer_room.panel.page3Button.ID,
+			page = menu.window_multiplayer_room.panel.page3.ID
+		},
+		{
+			button = menu.window_multiplayer_room.panel.page4Button.ID,
+			page = menu.window_multiplayer_room.panel.page4.ID
+		},
+	};
+
+	local basePath = 'classic/edit/multiroom/';
+
+	setTextureID(pages[MULTIPLAYER_ROOM_ACTIVE_PAGE].button, basePath .. textures[MULTIPLAYER_ROOM_ACTIVE_PAGE] .. 'off');
+	setTextureID(pages[page].button, basePath .. textures[page] .. 'on');
+	setVisible({ID=pages[MULTIPLAYER_ROOM_ACTIVE_PAGE].page}, false);
+	setVisible({ID=pages[page].page}, true);
+
+	MULTIPLAYER_ROOM_ACTIVE_PAGE = page;
+end;
+
+function setMultiplayerOption(PARENT, OPTION, INDEX)
+	getLabelEX(
+	    PARENT,
+	    anchorT, 
+	    XYWH(
+	    	10 + (((INDEX - 1) % 3) * 240),
+	    	6 + (math.floor((INDEX - 1) / 3) * 60),
+	    	240,
+	    	14
+	    ), 
+	    nil,
+	    OPTION.name,
+	    {
+	        font_colour = WHITE(),
+            nomouseevent = true,
+            font_name = BankGotic_14
+	    }
+	);
+	
+	clComboBox(
+	    PARENT,
+	    10 + (((INDEX - 1) % 3) * 240),
+	    24 + (math.floor((INDEX - 1) / 3) * 60),
+	    OPTION.list,
+	    OPTION.default + 1,
+	    'changeMultiplayerOption(' .. OPTION.id .. ', "INDEX")',
+	    {
+	        
+	    }
+	);
+
+	-- set default value
+	changeMultiplayerOption(OPTION.id, OPTION.default + 1);
+end;
+
+function changeMultiplayerOption(ID, INDEX)
+	-- todo
+end;
+
 function updatePlayersCount(currentCount, maxCount)
 	local text = currentCount .. '/0';
 
@@ -262,38 +528,47 @@ function updatePlayersCount(currentCount, maxCount)
 	setText(menu.window_multiplayer_room.panel.mapCount, text);
 end;
 
-function getMaxMinPlayers(SideDef, TeamDef)
-	local MaxPlayers = 0;
-	local MinPlayers = 0;
+function getPlayersCount(teamDef, sideDef, teamGame)
+	local maxPlayers = 0;
 	local allPositionsCount = 0;
 
 	for i = 1, 8 do
-		if SideDef[i].ENABLED then
+		if sideDef[i].ENABLED then
 			allPositionsCount = allPositionsCount + 1;
 		end;
 	end;
 
-	if not teamGame then
-		MaxPlayers = TeamDef[1].SIDESMAX;
+	if (not teamGame) then
+		maxPlayers = teamDef[1].SIDESMAX;
 	else
 		for i = 2, 9 do
-			if TeamDef[i].NAME ~= '' then
-				if TeamDef[i].SIDESMAX == -1 then
-					MaxPlayers = MaxPlayers + TeamDef[i].ASSIGNED_POSITIONS_COUNT;
+			if teamDef[i].NAME ~= '' then
+				if teamDef[i].SIDESMAX == -1 then
+					maxPlayers = maxPlayers + teamDef[i].ASSIGNED_POSITIONS_COUNT;
 				else
-					if TeamDef[i].SIDESMAX > TeamDef[i].ASSIGNED_POSITIONS_COUNT then
-						MaxPlayers = MaxPlayers + TeamDef[i].ASSIGNED_POSITIONS_COUNT;
+					if teamDef[i].SIDESMAX > teamDef[i].ASSIGNED_POSITIONS_COUNT then
+						maxPlayers = maxPlayers + teamDef[i].ASSIGNED_POSITIONS_COUNT;
 					else
-						MaxPlayers = MaxPlayers + TeamDef[i].SIDESMAX;
+						maxPlayers = maxPlayers + teamDef[i].SIDESMAX;
 					end;
 				end;
 			end;
 		end;
 	end;
 
-	if MaxPlayers > allPositionsCount then
-		MaxPlayers = allPositionsCount;
+	if maxPlayers > allPositionsCount then
+		maxPlayers = allPositionsCount;
 	end;
 
-	return MaxPlayers;
+	return maxPlayers;
+end;
+
+function getTeamGame(teamDef)
+	for i = 2, 9 do
+		if teamDef[i].NAME ~= '' then
+			return true;
+		end;
+	end;
+
+	return false;
 end;
