@@ -121,7 +121,7 @@ menu.window_skirmish.panel.mappic = getElementEX(
 		colour1 = WHITEA(255),
 		texture = 'classic/edit/mappic_default.png',
 		texture_fallback = 'classic/edit/mappic_default.png',
-		nomouseeventthis = true,
+		nomouseevent = true,
 	}
 );
 

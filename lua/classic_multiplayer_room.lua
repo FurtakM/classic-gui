@@ -1,6 +1,8 @@
 MULTIPLAYER_ROOM_DATA = {};
 MULTIPLAYER_ROOM_MAP_DATA = {};
 MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
+MULTIPLAYER_ROOM_IS_HOST = false;
+MULTIPLAYER_ROOM_IS_DEDI = false;
 
 menu.window_multiplayer_room = getElementEX(
     menu, 
@@ -234,6 +236,44 @@ menu.window_multiplayer_room.panel.page1 = getElementEX(
 	}
 );
 
+
+menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
+	menu.window_multiplayer_room.panel.page1,
+    anchorT, 
+    XYWH(778, 9, 240, 12),
+    nil, 
+    loc(846), -- player list
+    {
+		nomouseevent = true,
+        font_colour = WHITE(),
+        font_name = BankGotic_14,
+        wordwrap = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        scissor = true
+ 	}
+);
+
+menu.window_multiplayer_room.panel.page1.playerListKick = clButton(
+    menu.window_multiplayer_room.panel.page1,
+    804, 
+    338, 
+    156,
+    30, 
+    loc(498), -- kick player
+    'kickPlayer();',
+    {}
+);
+
+menu.window_multiplayer_room.panel.page1.playerList = clListBox(
+	menu.window_multiplayer_room.panel.page1, 
+	XYWH(778, 24, 224, 312), 
+	{}, 
+	1, 
+	'', 
+	{}
+);
+
 -- game settings page
 menu.window_multiplayer_room.panel.page2 = getElementEX(
 	menu.window_multiplayer_room.panel, 
@@ -358,7 +398,9 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
 	MULTIPLAYER_ROOM_DATA.Players = DATA.PLAYERS;
 
+	updateHostVisibilitySettings();
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
+	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
 end;
 
 -- trigger each when map is changed
@@ -412,6 +454,9 @@ end;
 -- main functions
 function showMultiplayerGame()
   	IN_LOBBY = false;	
+  	MULTIPLAYER_ROOM_IS_HOST = getvalue(OWV_IAMSERVER);
+	MULTIPLAYER_ROOM_IS_DEDI = getvalue(OWV_IAMDEDIHOST);
+
   	setVisible(menu.window_multiplayer, false);
   	setVisible(menu.window_multiplayer_room, true);
 
@@ -516,6 +561,60 @@ end;
 
 function changeMultiplayerOption(ID, INDEX)
 	-- todo
+end;
+
+function selectPlayerOnPlayerList(INDEX)
+	clSetListSelectedItem(menu.window_multiplayer_room.panel.page1.playerList.ID, INDEX);
+end;
+
+function kickPlayer()
+	if (not MULTIPLAYER_ROOM_IS_HOST) then
+		return;
+	end;
+
+	local index = clGetListSelectedIndex(menu.window_multiplayer_room.panel.page1.playerList.ID);
+	local player = MULTIPLAYER_ROOM_DATA.Players[index].PLID;
+
+	if (index == 1 or player == nil or player == 0) then
+		return;
+	end;
+
+	OW_MULTIROOM_HOST_KICKPLAYER(player);
+end;
+
+function updateHostVisibilitySettings()
+	-- hide/show kick player button if player is host
+	setVisible(menu.window_multiplayer_room.panel.page1.playerListKick, MULTIPLAYER_ROOM_IS_HOST);
+end;
+
+--[[	 
+	PLAYERS [1..12] of
+		  NAME String
+		  ALIVE Boolean
+		  ISCOMP Boolean
+		  NATION Integer
+		  TEAM Integer
+		  TEAMPOS Integer
+		  SIDE Integer
+		  COLOUR Integer
+		  READY Boolean
+		  LOCKED Boolean
+		  TEAMREADY Boolean
+		  PLID Integer (PLAYER ID)
+		  ISSPEC Boolean
+		  ISDEDI Boolean
+		  AVATAR Array [1..14] of Byte
+		  AVATARSEX Byte
+		  PING Integer
+--]]
+function updatePlayersOnServer(players)
+	local playersList = {};
+
+	for i = 1, table.getn(players) do
+		playersList = addToArray(playersList, players[i].NAME .. ' (' .. players[i].PLID .. ')');
+	end;
+
+	clSetListItems(menu.window_multiplayer_room.panel.page1.playerList, playersList, 0, 'selectPlayerOnPlayerList(INDEX);', {});
 end;
 
 function updatePlayersCount(currentCount, maxCount)

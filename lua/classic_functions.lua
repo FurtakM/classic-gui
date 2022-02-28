@@ -1183,7 +1183,7 @@ function clSetListItems(PARENT, ITEMS, SELECTED_ITEM, CALLBACK, PROPERTIES)
     LISTBOX_LIST[PARENT.ID] = {
         ID = PARENT.ID,
         ITEMS = ITEMS,
-        SELECTED = SELECTEDITEM,
+        SELECTED = SELECTED_ITEM,
         ELEMENTS = tmpElement
     };
 end;
@@ -1193,7 +1193,7 @@ function clSetListSelectedItem(ID, INDEX)
         return;
     end;
 
-    LISTBOX_LIST[ID].SELECTEDITEM = parseInt(INDEX);
+    LISTBOX_LIST[ID].SELECTED = parseInt(INDEX);
 
     for i = 1, table.getn(LISTBOX_LIST[ID].ELEMENTS) do
         set_Callback(LISTBOX_LIST[ID].ELEMENTS[i], CALLBACK_MOUSELEAVE, 'clHoverItem(' .. LISTBOX_LIST[ID].ELEMENTS[i] .. ', 0, ' .. BoolToInt(i == INDEX) .. ')');
@@ -1201,7 +1201,7 @@ function clSetListSelectedItem(ID, INDEX)
         setColour1({ID = LISTBOX_LIST[ID].ELEMENTS[i]}, WHITEA());
     end;
     
-    setColour1({ID = LISTBOX_LIST[ID].ELEMENTS[LISTBOX_LIST[ID].SELECTEDITEM]}, RGB(191, 191, 191));
+    setColour1({ID = LISTBOX_LIST[ID].ELEMENTS[LISTBOX_LIST[ID].SELECTED]}, RGB(191, 191, 191));
 end;
 
 function clGetListSelectedItem(ID)
@@ -1215,7 +1215,7 @@ function clGetListSelectedIndex(ID)
 end;
 
 function clGetListSelectedElement(ID)
-    return LISTBOX_LIST[ID].ELEMENTS[LISTBOX_LIST[ID].SELECTEDITEM];
+    return LISTBOX_LIST[ID].ELEMENTS[LISTBOX_LIST[ID].SELECTED];
 end;
 
 function clGetListItems(ID)
