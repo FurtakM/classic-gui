@@ -34,7 +34,7 @@ menu.window_multiplayer.panel = getElementEX(
 menu.window_multiplayer.panel.IRC = clTextBoxWithTexture(
     menu.window_multiplayer.panel,
     anchorLTRB,
-    XYWH(8, 18, 756, 435), 
+    XYWH(8, 18, 764, 435), 
     '',
     {
     	texture = 'classic/edit/textbox_irc.png',

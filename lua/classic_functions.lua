@@ -1392,21 +1392,35 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES, CALLBAC
         }
     );
 
-    ELEMENT.textbox = clTextBox(
+    ELEMENT.textboxLayout = getElementEX(
         ELEMENT,
+        anchorLTRB,
+        XYWH(
+            0,
+            0,
+            ELEMENT.width - 18,
+            ELEMENT.height
+        ),
+        TEXT,
+        {
+            texture = PROPERTIES.texture
+        }
+    );
+
+    ELEMENT.textbox = clTextBox(
+        ELEMENT.textboxLayout,
         anchorLTRB,
         XYWH(
             PROPERTIES.padding.x,
             PROPERTIES.padding.y,
-            ELEMENT.width - 12 - PROPERTIES.padding.x,
-            ELEMENT.height - PROPERTIES.padding.y
+            ELEMENT.textboxLayout.width - PROPERTIES.padding.x,
+            ELEMENT.textboxLayout.height - PROPERTIES.padding.y
         ),
         TEXT,
         {
             font_name = PROPERTIES.font_name,
             font_colour = PROPERTIES.font_colour,
-            texture = PROPERTIES.texture,
-            callback_itemadded = CALLBACKS.added
+            callback_itemadded = CALLBACKS.added,
         }
     );
 
@@ -1414,10 +1428,10 @@ function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES, CALLBAC
         ELEMENT,
         anchorNone,
         XYWH(
-            ELEMENT.textbox.x + ELEMENT.textbox.width + 1, 
-            ELEMENT.textbox.y - PROPERTIES.padding.y, 
+            ELEMENT.textboxLayout.width, 
+            ELEMENT.textboxLayout.y, 
             12,
-            ELEMENT.textbox.height + PROPERTIES.padding.y
+            ELEMENT.textboxLayout.height
         ), 
         ELEMENT.textbox, 
         SKINTYPE_NONE,
@@ -1509,6 +1523,32 @@ function clEditText(PARENT, ANCHOR, POSSIZE, PROPERTIES)
     end;
 
     return ELEMENT;
+end;
+
+function clDebug(VALUE)
+    local debugWindow = getElementEX(
+        nil,
+        anchorLT,
+        XYWH(0, 0, 400, 400),
+        true,
+        {
+            colour1 = WHITEA()
+        }
+    );
+
+    local debugTextBox = clTextBoxWithTexture(
+        debugWindow,
+        anchorLTRB,
+        XYWH(0, 0, debugWindow.width, debugWindow.height), 
+        '',
+        {
+            font_colour = BLACK(),
+            nomouseevent = true,
+            font_name = ADMUI3L
+        }
+    );
+
+    setText(debugTextBox.TEXTBOX, dump(VALUE));
 end;
 
 function filesInMod(mod, directory)

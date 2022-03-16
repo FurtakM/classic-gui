@@ -364,5 +364,12 @@ function invokeCallback(ELEMENT, _TYPE, REPLACE_TABLE)
 end;
 
 function trim(s)
-   return (s:gsub("^%s*(.-)%s*$", "%1"))
+    return (s:gsub("^%s*(.-)%s*$", "%1"));
+end
+
+function unionArray(a, b)
+    local result = {table.unpack(a)};
+    table.move(b, 1, #b, #result + 1, result);
+
+    return result;
 end

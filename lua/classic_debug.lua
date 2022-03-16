@@ -2,10 +2,10 @@
 debugLayout = getElementEX(
     nil,
     anchorLT,
-    XYWH(0, 0, 300, 300),
+    XYWH(0, 0, 400, 400),
     false,
     {
-        colour1 = RGB(0, 0, 0)
+        colour1 = RGB(0, 0, 0),
     }
 );
 

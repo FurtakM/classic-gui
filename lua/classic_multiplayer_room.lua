@@ -3,6 +3,7 @@ MULTIPLAYER_ROOM_MAP_DATA = {};
 MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
 MULTIPLAYER_ROOM_IS_HOST = false;
 MULTIPLAYER_ROOM_IS_DEDI = false;
+MULTIPLAYER_ROOM_SLOTS_DATA = {};
 
 menu.window_multiplayer_room = getElementEX(
     menu, 
@@ -127,13 +128,16 @@ menu.window_multiplayer_room.panel.status = getLabelEX(
 menu.window_multiplayer_room.panel.chat = clTextBoxWithTexture(
     menu.window_multiplayer_room.panel,
     anchorLTRB,
-    XYWH(418, 24, 582, 180), 
+    XYWH(412, 24, 596, 178), 
     '',
     {
         font_colour = BLACK(),
         nomouseevent = true,
         font_name = ADMUI3L,
-        padding = {x = 0, y = 0}
+        padding = {
+        	x = 4,
+        	y = 0
+        }
         -- added='setTextID(%id, %data);',
     }
 );
@@ -161,7 +165,7 @@ menu.window_multiplayer_room.panel.page1Button = getElementEX(
 	anchorLTRB,
 	XYWH(
 		7, 
-		244,
+		243,
 		60,
 		26
 	),
@@ -177,7 +181,7 @@ menu.window_multiplayer_room.panel.page2Button = getElementEX(
 	anchorLTRB,
 	XYWH(
 		67, 
-		244,
+		243,
 		60,
 		26
 	),
@@ -193,7 +197,7 @@ menu.window_multiplayer_room.panel.page3Button = getElementEX(
 	anchorLTRB,
 	XYWH(
 		127, 
-		244,
+		243,
 		60,
 		26
 	),
@@ -209,7 +213,7 @@ menu.window_multiplayer_room.panel.page4Button = getElementEX(
 	anchorLTRB,
 	XYWH(
 		187, 
-		244,
+		243,
 		60,
 		26
 	),
@@ -236,6 +240,22 @@ menu.window_multiplayer_room.panel.page1 = getElementEX(
 	}
 );
 
+menu.window_multiplayer_room.panel.page1.playerSlots = getElementEX(
+	menu.window_multiplayer_room.panel.page1, 
+	anchorLTRB,
+	XYWH(
+		8, 
+		8,
+		750,
+		470
+	),
+	true,
+	{
+		colour1 = WHITEA()
+	}
+);
+
+-- check init player slots
 
 menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 	menu.window_multiplayer_room.panel.page1,
@@ -368,6 +388,7 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
 
 	-- generate map settings
+	refreshPlayerSlots(MULTIPLAYER_ROOM_DATA.MaxPlayers);
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -401,6 +422,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updateHostVisibilitySettings();
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
+	updatePlayerSlots();
 end;
 
 -- trigger each when map is changed
@@ -670,4 +692,57 @@ function getTeamGame(teamDef)
 	end;
 
 	return false;
+end;
+
+-- generate SGUI slots for players
+function refreshPlayerSlots(count)
+	MULTIPLAYER_ROOM_SLOTS_DATA = {};
+	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+
+	for i = 1, count do
+		local id = getElementEX(
+			menu.window_multiplayer_room.panel.page1.playerSlots, 
+			anchorLTRB,
+			XYWH(
+				2,
+				2 + (26 * (i - 1)), 
+				750,
+				24
+			),
+			true,
+			{
+				texture = 'classic/edit/multiroom/player_slot.png'
+			}
+		);
+	end;
+
+	clDebug(MULTIPLAYER_ROOM_DATA.TEAMDEF);
+end;
+
+-- update SGUI slots for players
+function updatePlayerSlots()
+
+end;
+
+function takeSlot(slotID)
+
+end;
+
+-- join to team
+function joinToTeam(teamID, mergePlayerPosID)
+	OW_MULTIROOM_SET_MYTEAMANDPOS(teamID, mergePlayerPosID);
+	OW_MULTIROOM_SET_MYISSPEC(false);
+
+	
+end;
+
+-- reset player data
+-- resetColour : bool
+function resetPlayerData(resetColour)
+	if resetColour == true then
+		OW_MULTIROOM_SET_MYCOLOUR(0);
+	end;
+
+	OW_MULTIROOM_SET_MYSIDE(0);
+	OW_MULTIROOM_SET_MYNATION(0);
 end;
