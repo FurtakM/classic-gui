@@ -388,7 +388,7 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
 
 	-- generate map settings
-	refreshPlayerSlots(MULTIPLAYER_ROOM_DATA.MaxPlayers);
+	refreshPlayerView(MULTIPLAYER_ROOM_DATA.MaxPlayers);
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -695,10 +695,31 @@ function getTeamGame(teamDef)
 end;
 
 -- generate SGUI slots for players
-function refreshPlayerSlots(count)
+function refreshPlayerView()
 	MULTIPLAYER_ROOM_SLOTS_DATA = {};
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
 
+	-- generate team names
+	for i = 2, 9 do
+		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
+			teamLabel = getLabelEX(
+			    menu.window_multiplayer_room.panel.page1.playerSlots, 
+			    anchorT, 
+			    XYWH(10, (i - 2) * 60, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
+			    Tahoma_18B, 
+			    MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME,
+			    {
+			        wordwrap = true,
+			        text_halign = ALIGN_MIDDLE,
+			        text_valign = ALIGN_TOP,
+			        font_colour = RGB(231, 222, 214),
+			        shadowtext = true
+			    }
+			);
+		end;
+	end;
+
+	--[[
 	for i = 1, count do
 		local id = getElementEX(
 			menu.window_multiplayer_room.panel.page1.playerSlots, 
@@ -714,9 +735,9 @@ function refreshPlayerSlots(count)
 				texture = 'classic/edit/multiroom/player_slot.png'
 			}
 		);
-	end;
+	end;--]]
 
-	clDebug(MULTIPLAYER_ROOM_DATA.TEAMDEF);
+	--clDebug(MULTIPLAYER_ROOM_DATA.TEAMDEF);
 end;
 
 -- update SGUI slots for players

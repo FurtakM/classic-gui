@@ -1529,7 +1529,7 @@ function clDebug(VALUE)
     local debugWindow = getElementEX(
         nil,
         anchorLT,
-        XYWH(0, 0, 400, 400),
+        XYWH(0, 0, 400, 430),
         true,
         {
             colour1 = WHITEA()
@@ -1539,7 +1539,7 @@ function clDebug(VALUE)
     local debugTextBox = clTextBoxWithTexture(
         debugWindow,
         anchorLTRB,
-        XYWH(0, 0, debugWindow.width, debugWindow.height), 
+        XYWH(0, 0, debugWindow.width, 400), 
         '',
         {
             font_colour = BLACK(),
@@ -1548,7 +1548,19 @@ function clDebug(VALUE)
         }
     );
 
+    local debugCloseBtn = clButton(
+        debugWindow, 
+        0, 
+        400, 
+        400,
+        30, 
+        'Exit', 
+        'setVisibleID(' .. debugWindow.ID .. ', false);',
+        {}
+    );
+
     setText(debugTextBox.TEXTBOX, dump(VALUE));
+    LUA_TO_DEBUGLOG(dump(VALUE));
 end;
 
 function filesInMod(mod, directory)
