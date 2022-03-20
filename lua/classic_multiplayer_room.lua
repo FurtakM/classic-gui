@@ -4,6 +4,7 @@ MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
 MULTIPLAYER_ROOM_IS_HOST = false;
 MULTIPLAYER_ROOM_IS_DEDI = false;
 MULTIPLAYER_ROOM_SLOTS_DATA = {};
+MULTIPLAYER_ROOM_MY_TEAM = 0;
 
 menu.window_multiplayer_room = getElementEX(
     menu, 
@@ -112,7 +113,7 @@ menu.window_multiplayer_room.panel.playerName = getLabelEX(
 menu.window_multiplayer_room.panel.status = getLabelEX(
     menu.window_multiplayer_room.panel,
     anchorLTRB,
-    XYWH(12, 170, 372, 28),
+    XYWH(14, 174, 370, 60),
     nil,
     '',
     {
@@ -120,7 +121,9 @@ menu.window_multiplayer_room.panel.status = getLabelEX(
         nomouseevent = true,
         font_name = ADMUI3L,
         scissor = true,
-        wordwrap = true
+        wordwrap = true,
+        text_halign = ALIGN_TOP,	
+        text_valign = ALIGN_LEFT,
     }
 ); 
 
@@ -386,9 +389,6 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA = DATA;
 	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
-
-	-- generate map settings
-	refreshPlayerView(MULTIPLAYER_ROOM_DATA.MaxPlayers);
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -422,7 +422,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updateHostVisibilitySettings();
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
-	updatePlayerSlots();
+	refreshPlayerView();
 end;
 
 -- trigger each when map is changed
@@ -699,13 +699,23 @@ function refreshPlayerView()
 	MULTIPLAYER_ROOM_SLOTS_DATA = {};
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
 
+	local teamPlayers = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
+
+	for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+		if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
+			teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
+		end;
+	end;
+
+	local posY = 0; -- start Y pos for elements
+
 	-- generate team names
 	for i = 2, 9 do
 		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
 			teamLabel = getLabelEX(
 			    menu.window_multiplayer_room.panel.page1.playerSlots, 
 			    anchorT, 
-			    XYWH(10, (i - 2) * 60, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
+			    XYWH(10, posY, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
 			    Tahoma_18B, 
 			    MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME,
 			    {
@@ -716,45 +726,80 @@ function refreshPlayerView()
 			        shadowtext = true
 			    }
 			);
+
+			posY = posY + 26;
+
+			if (i == MULTIPLAYER_ROOM_MY_TEAM) then
+				teamBtn = clButton(
+				    menu.window_multiplayer_room.panel.page1.playerSlots, 
+				    304, 
+				    posY, 
+				    150,
+				    18, 
+				    loc(825), -- leave
+				    'leaveTeam();',
+				    {
+				    	texture = 'classic/edit/menu_button_small_l.png',
+				    	texture2 = 'classic/edit/menu_button_small_c.png',
+				    	texture3 = 'classic/edit/menu_button_small_r.png'
+				    }
+				);
+			else
+				teamBtn = clButton(
+				    menu.window_multiplayer_room.panel.page1.playerSlots, 
+				    304, 
+				    posY, 
+				    150,
+				    18, 
+				    loc(839), -- join
+				    'joinToTeam(' .. i .. ', -1);',
+				    {
+				    	texture = 'classic/edit/menu_button_small_l.png',
+				    	texture2 = 'classic/edit/menu_button_small_c.png',
+				    	texture3 = 'classic/edit/menu_button_small_r.png'
+				    }
+				);
+			end;
+
+			if (#teamPlayers[i] > 0) then
+				for p = 1, #teamPlayers[i] do
+					posY = posY + 28;
+
+					local slot = getElementEX(
+						menu.window_multiplayer_room.panel.page1.playerSlots, 
+						anchorLTRB,
+						XYWH(
+							2,
+							posY, 
+							750,
+							24
+						),
+						true,
+						{
+							texture = 'classic/edit/multiroom/player_slot.png'
+						}
+					);
+				end;
+			end;
+
+			posY = posY + 38;
 		end;
 	end;
 
-	--[[
-	for i = 1, count do
-		local id = getElementEX(
-			menu.window_multiplayer_room.panel.page1.playerSlots, 
-			anchorLTRB,
-			XYWH(
-				2,
-				2 + (26 * (i - 1)), 
-				750,
-				24
-			),
-			true,
-			{
-				texture = 'classic/edit/multiroom/player_slot.png'
-			}
-		);
-	end;--]]
-
-	--clDebug(MULTIPLAYER_ROOM_DATA.TEAMDEF);
-end;
-
--- update SGUI slots for players
-function updatePlayerSlots()
-
-end;
-
-function takeSlot(slotID)
-
+	--clDebug(MULTIPLAYER_ROOM_DATA.Players);
 end;
 
 -- join to team
 function joinToTeam(teamID, mergePlayerPosID)
 	OW_MULTIROOM_SET_MYTEAMANDPOS(teamID, mergePlayerPosID);
 	OW_MULTIROOM_SET_MYISSPEC(false);
+	MULTIPLAYER_ROOM_MY_TEAM = teamID;
+end;
 
-	
+function leaveTeam()
+	OW_MULTIROOM_SET_MYTEAMANDPOS(0, -1);
+	OW_MULTIROOM_SET_MYISSPEC(false);
+	MULTIPLAYER_ROOM_MY_TEAM = 0;
 end;
 
 -- reset player data
