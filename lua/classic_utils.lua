@@ -104,8 +104,30 @@ function length(t)
 end;
 
 function addToArray(array, element)
-  array[#array + 1] = element;
-  return array;
+    array[#array + 1] = element;
+    return array;
+end;
+
+function insertToArray(array, element, index)
+    local size = #array;
+
+    if (index < 1 or index >= size) then
+        return addToArray(array, element);
+    end;
+
+    local tmp = {};
+
+    for i = 1, index do
+        tmp = addToArray(tmp, array[i]);
+    end;    
+
+    tmp = addToArray(tmp, element);
+
+    for i = index + 1, size do
+        tmp = addToArray(tmp, array[i]);
+    end;
+
+    return tmp;
 end;
 
 function inArray(array, element)

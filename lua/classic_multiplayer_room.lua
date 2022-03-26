@@ -1,10 +1,11 @@
+MULTIPLAYER_ROOM_ACTIVE = false;
 MULTIPLAYER_ROOM_DATA = {};
 MULTIPLAYER_ROOM_MAP_DATA = {};
 MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
 MULTIPLAYER_ROOM_IS_HOST = false;
 MULTIPLAYER_ROOM_IS_DEDI = false;
-MULTIPLAYER_ROOM_SLOTS_DATA = {};
 MULTIPLAYER_ROOM_MY_TEAM = 0;
+MULTIPLAYER_ROOM_MY_PLID = 0;
 
 menu.window_multiplayer_room = getElementEX(
     menu, 
@@ -386,7 +387,9 @@ DATA Breakdown
             RU    Boolean 
 --]]
 
-	MULTIPLAYER_ROOM_DATA = DATA;
+	MULTIPLAYER_ROOM_DATA.MULTIMAP = DATA.MULTIMAP;
+	MULTIPLAYER_ROOM_DATA.SIDEDEF = DATA.SIDEDEF;
+	MULTIPLAYER_ROOM_DATA.TEAMDEF = DATA.TEAMDEF;
 	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
 end;
@@ -422,6 +425,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updateHostVisibilitySettings();
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
+
 	refreshPlayerView();
 end;
 
@@ -472,10 +476,15 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
     OW_IRC_DESTROY();
 end;
 
+function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
+
+end;
+
 
 -- main functions
 function showMultiplayerGame()
   	IN_LOBBY = false;	
+  	MULTIPLAYER_ROOM_ACTIVE = true;
   	MULTIPLAYER_ROOM_IS_HOST = getvalue(OWV_IAMSERVER);
 	MULTIPLAYER_ROOM_IS_DEDI = getvalue(OWV_IAMDEDIHOST);
 
@@ -492,8 +501,18 @@ function hideMultiplayerGame()
 	end;
 
 	IN_LOBBY = true;	
+	MULTIPLAYER_ROOM_ACTIVE = false;
   	setVisible(menu.window_multiplayer_room, false);
   	setVisible(menu.window_multiplayer, true);
+
+  	MULTIPLAYER_ROOM_MY_TEAM = 0;
+  	MULTIPLAYER_ROOM_IS_HOST = false;
+  	MULTIPLAYER_ROOM_IS_DEDI = false;
+  	MULTIPLAYER_ROOM_DATA = {};
+  	MULTIPLAYER_ROOM_MAP_DATA = {};
+
+  	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+  	clearAvatarCache();
 end;
 
 function sendChatMessage(key)
@@ -696,15 +715,28 @@ end;
 
 -- generate SGUI slots for players
 function refreshPlayerView()
-	MULTIPLAYER_ROOM_SLOTS_DATA = {};
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
 
-	local teamPlayers = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
+	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
+	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
+	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
 
-	for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
-		if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
-			teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
+	if (#MULTIPLAYER_ROOM_DATA.Players > 0) then
+		-- get my plid
+		MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
+
+		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_COMPONENT = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
+
+			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
+				teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
+				playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
+			end;
 		end;
+	end;
+
+	if (MULTIPLAYER_ROOM_DATA.TEAMDEF == nil) then
+		return;
 	end;
 
 	local posY = 0; -- start Y pos for elements
@@ -762,36 +794,204 @@ function refreshPlayerView()
 			end;
 
 			if (#teamPlayers[i] > 0) then
-				for p = 1, #teamPlayers[i] do
-					posY = posY + 28;
+				for p = 1, #teamPlayers[i] do				
+					local playerData = MULTIPLAYER_ROOM_DATA.Players[teamPlayers[i][p]];
+					local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
+					local isMerged = isMerged(playerData.PLID, playerData.TEAM, playerData.TEAMPOS, playerMerged[playerData.TEAMPOS + 1]);
+					local slotExists = #playerSlots[i] >= playerData.TEAMPOS + 1;
 
-					local slot = getElementEX(
-						menu.window_multiplayer_room.panel.page1.playerSlots, 
-						anchorLTRB,
-						XYWH(
-							2,
-							posY, 
-							750,
-							24
-						),
-						true,
-						{
-							texture = 'classic/edit/multiroom/player_slot.png'
-						}
-					);
+					-- clDebug(playerSlots[i]);
+
+					if (slotExists and isMerged) then
+						local id = parseInt(playerSlots[i][playerData.TEAMPOS + 1]);
+
+						if (id ~= nil) then
+							setTextID(id, getTextID(id) .. ' + ' .. playerData.NAME);
+						end;
+					else
+						posY = posY + 28;
+
+						local slot = getElementEX(
+							menu.window_multiplayer_room.panel.page1.playerSlots, 
+							anchorLTRB,
+							XYWH(
+								2,
+								posY, 
+								750,
+								24
+							),
+							true,
+							{
+								texture = 'classic/edit/multiroom/player_slot.png'
+							}
+						);
+
+						local texture = 'notready';
+
+						if (playerData.PLID == 1 and playerData.READY == true) then
+							texture = 'server';
+						elseif (playerData.READY == true) then
+							texture = 'ready';
+						end;
+
+						local slotPlayerStatus = getElementEX(
+							slot, 
+							anchorLTRB,
+							XYWH(
+								4,
+								2, 
+								20,
+								20
+							),
+							true,
+							{
+								texture = 'classic/edit/special/' .. texture .. '.png'
+							}
+						);
+
+						local slotPlayerAvatar = getElementEX(
+							slot, 
+							anchorLTRB,
+							XYWH(
+								28,
+								2, 
+								20,
+								20
+							),
+							true,
+							{
+								texture = 'Avatars/unknow.png'
+							}
+						);
+
+						if (playerData.AVATAR_COMPONENT) then
+							SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_COMPONENT, 80, 100, 80, 100);
+						end;
+
+						local slotPlayerName = getLabelEX(
+							slot,
+						    anchorT, 
+						    XYWH(50, 4, 260, 14),
+						    nil, 
+						    playerData.NAME, 
+						    {
+								nomouseevent = true,
+						        font_colour = WHITE(),
+						        font_name = BankGotic_14,
+						        wordwrap = false,
+						        text_halign = ALIGN_TOP,
+						        text_valign = ALIGN_LEFT,
+						        scissor = true
+						 	}
+						);
+
+						playerSlots[i] = addToArray(playerSlots[i], slotPlayerName.ID);
+
+						if (isMySlot and not isMerged) then
+							local slotPlayerLock = clCheckbox(
+							    slot,
+							    659,
+							    4,
+							    'changeLockStatus(' .. boolToStr(not playerData.LOCKED) .. ');',
+							    {
+							        checked = playerData.LOCKED,
+							        hint = loc(829)
+							    }
+							);
+
+							local slotPlayerLockLabel = getLabelEX(
+							    slot,
+							    anchorLT,
+							    XYWH(678, 4, 160, 16),
+							    BankGotic_14, 
+							    loc(828),
+							    {
+							        font_colour = RGB(0, 0, 0),
+							        shadowtext = false,
+							        nomouseevent = true,
+							        text_halign = ALIGN_LEFT,
+							        text_valign = ALIGN_TOP,
+							        wordwrap = false,
+							        scissor = true
+							    }
+							);
+						else
+							if (isMerged) then
+								local leavePlayer = clButton(
+								    slot, 
+								    660, 
+								    3, 
+								    84,
+								    18, 
+								    loc(844), -- separate
+								    'joinToTeam(' .. i .. ', -1);',
+								    {
+								    	texture = 'classic/edit/menu_button_small_l.png',
+								    	texture2 = 'classic/edit/menu_button_small_c.png',
+								    	texture3 = 'classic/edit/menu_button_small_r.png'
+								    }
+								);
+							else
+								local joinToPlayer = clButton(
+								    slot, 
+								    660, 
+								    3, 
+								    84,
+								    18, 
+								    loc(839), -- join
+								    'joinToTeam(' .. i .. ', ' .. playerData.TEAMPOS .. ');',
+								    {
+								    	texture = 'classic/edit/menu_button_small_l.png',
+								    	texture2 = 'classic/edit/menu_button_small_c.png',
+								    	texture3 = 'classic/edit/menu_button_small_r.png'
+								    }
+								);
+							end;
+						end;
+					end;
 				end;
 			end;
 
 			posY = posY + 38;
 		end;
 	end;
+end;
 
-	--clDebug(MULTIPLAYER_ROOM_DATA.Players);
+function isMerged(plid, team, teamPos, mergedPlayers)
+	if (#mergedPlayers < 2) then
+		return false;
+	end;
+
+	for i = 1, #mergedPlayers do
+		local player = getPlayerByPLID(mergedPlayers[i]);
+
+		if (mergedPlayers[i] ~= plid and team == player.TEAM and teamPos == player.TEAMPOS) then
+			return true;
+		end;
+	end;
+
+	return false;
+end;
+
+function getPlayerByPLID(plid)
+	if (#MULTIPLAYER_ROOM_DATA.Players == 0) then
+		return {};
+	end;
+
+	for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
+		if (MULTIPLAYER_ROOM_DATA.Players[i].PLID == plid) then
+			return MULTIPLAYER_ROOM_DATA.Players[i];
+		end;
+	end;
+end;
+
+function changeLockStatus(isLocked)
+	OW_MULTIROOM_SET_MYLOCKED(isLocked);
 end;
 
 -- join to team
-function joinToTeam(teamID, mergePlayerPosID)
-	OW_MULTIROOM_SET_MYTEAMANDPOS(teamID, mergePlayerPosID);
+function joinToTeam(teamID, teamPos)
+	OW_MULTIROOM_SET_MYTEAMANDPOS(teamID, teamPos);
 	OW_MULTIROOM_SET_MYISSPEC(false);
 	MULTIPLAYER_ROOM_MY_TEAM = teamID;
 end;
@@ -799,6 +999,7 @@ end;
 function leaveTeam()
 	OW_MULTIROOM_SET_MYTEAMANDPOS(0, -1);
 	OW_MULTIROOM_SET_MYISSPEC(false);
+	resetPlayerData(true);
 	MULTIPLAYER_ROOM_MY_TEAM = 0;
 end;
 

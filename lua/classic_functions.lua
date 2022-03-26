@@ -1563,6 +1563,18 @@ function clDebug(VALUE)
     LUA_TO_DEBUGLOG(dump(VALUE));
 end;
 
+function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, EVENT)
+    local ELEMENT = getElementEX(
+        PARENT, 
+        anchorNone, 
+        XYWH(X, Y, 234, 22), 
+        PROPERTIES.visible,
+        {
+            colour1 = WHITEA()
+        }
+    );
+end;
+
 function filesInMod(mod, directory)
     return OW_FILELIST('%ow%/mods/' .. mod .. '/' .. directory);
 end;

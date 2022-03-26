@@ -18,6 +18,7 @@ include('classic_debug');
 include('classic_utils');
 include('classic_functions');
 include('classic_debrief');
+include('classic_avatar');
 include('classic_dialog');
 include('classic_profile');
 include('classic_achivs');
