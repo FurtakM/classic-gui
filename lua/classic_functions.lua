@@ -637,10 +637,42 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
         PROPERTIES.disabled = false;
     end;
 
+    if PROPERTIES.width == nil then
+        PROPERTIES.width = 234;
+    end;
+
+    if PROPERTIES.height == nil then
+        PROPERTIES.height = 22;
+    end;
+
+    if PROPERTIES.widthList == nil then
+        PROPERTIES.widthList = 234;
+    end;
+
+    if PROPERTIES.heightList == nil then
+        PROPERTIES.heightList = 270;
+    end;
+
+    if PROPERTIES.trimLength == nil then
+        PROPERTIES.trimLength = 22;
+    end;
+
+    if PROPERTIES.defaultLabel == nil then
+        PROPERTIES.defaultLabel = '';
+    end;
+
+    local label = '';
+
+    if ITEMS[SELECTEDITEM] == nil then
+        label = PROPERTIES.defaultLabel;
+    else
+        label = ITEMS[SELECTEDITEM];
+    end;
+
     local ELEMENT = getElementEX(
         PARENT, 
         anchorNone, 
-        XYWH(X, Y, 234, 22), 
+        XYWH(X, Y, PROPERTIES.width, PROPERTIES.height), 
         PROPERTIES.visible,
         {
             colour1 = WHITEA(),
@@ -651,7 +683,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.comboBox = getElementEX(
         ELEMENT,
         anchorLTRB,
-        XYWH(0, 0, 234, 22),
+        XYWH(0, 0, PROPERTIES.width, PROPERTIES.height),
         true,
         {
             colour1 = WHITEA()
@@ -661,7 +693,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.comboBox.selected = getElementEX(
         ELEMENT.comboBox,
         anchorL,
-        XYWH(0, 0, 213, 22),
+        XYWH(0, 0, PROPERTIES.width - 21, PROPERTIES.height),
         true,
         {
             texture = PROPERTIES.texture,
@@ -671,20 +703,21 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.comboBox.selected.label = getLabelEX(
         ELEMENT.comboBox.selected,
         anchorLTRB,
-        XYWH(4, 0, 211, 22),
+        XYWH(4, 0, PROPERTIES.width - 28, PROPERTIES.height),
         nil,
-        SGUI_widesub(ITEMS[SELECTEDITEM], 1, 22),
+        SGUI_widesub(label, 1, PROPERTIES.trimLength),
         {
             font_colour = BLACK(),
             nomouseevent = true,
-            font_name = BankGotic_14
+            font_name = BankGotic_14,
+            scissor = true
         }
     );
 
     ELEMENT.comboBox.button = getImageButtonEX(
         ELEMENT.comboBox,
         anchorR,
-        XYWH(213, 0, 21, 22),
+        XYWH(PROPERTIES.width - 21, 0, 21, 22),
         '',
         '',
         '',
@@ -707,7 +740,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.list = getElementEX(
         ELEMENT.background,
         anchorNone,
-        XYWH(getAbsX(ELEMENT), getAbsY(ELEMENT) + 22, 234, 270),
+        XYWH(getAbsX(ELEMENT), getAbsY(ELEMENT) + 22, PROPERTIES.widthList, PROPERTIES.heightList),
         false,
         {
             colour1 = WHITEA()
@@ -717,7 +750,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.combo = getElementEX(
         ELEMENT.list,
         anchorNone,
-        XYWH(0, 0, 214, 270),
+        XYWH(0, 0, PROPERTIES.widthList - 20, PROPERTIES.heightList),
         true,
         {
             texture = PROPERTIES.textureList,
@@ -727,7 +760,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.list.scroll = getScrollboxEX(
         ELEMENT.combo, 
         anchorNone, 
-        XYWH(0, 5, 214, 262),
+        XYWH(0, 5, PROPERTIES.widthList - 20, PROPERTIES.heightList - 8),
         {
             colour1 = WHITEA()
         }
@@ -738,7 +771,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.list.scrollBar = clScrollBarEX2(
         ELEMENT.list,
         anchorNone,
-        XYWH(214, 0, 20, 270), 
+        XYWH(PROPERTIES.widthList - 20, 0, 20, PROPERTIES.heightList), 
         ELEMENT.list.scroll, 
         SKINTYPE_NONE,
         false,
@@ -1563,16 +1596,93 @@ function clDebug(VALUE)
     LUA_TO_DEBUGLOG(dump(VALUE));
 end;
 
-function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, EVENT)
+function clColorPicker(PARENT, ACTIVE, COLOR, X, Y)
+    if COLOR < 0 or COLOR > 8 then
+        COLOR = 0;
+    end;
+
     local ELEMENT = getElementEX(
         PARENT, 
         anchorNone, 
-        XYWH(X, Y, 234, 22), 
-        PROPERTIES.visible,
+        XYWH(X, Y, 54, 18), 
+        true,
         {
             colour1 = WHITEA()
         }
     );
+
+    ELEMENT.comboBox = getElementEX(
+        ELEMENT,
+        anchorLTRB,
+        XYWH(0, 0, 36, 18),
+        true,
+        {
+            texture = 'classic/edit/special/color-' .. COLOR .. '.png'
+        }
+    );
+
+    if ACTIVE then
+        ELEMENT.comboBox.button = getImageButtonEX(
+            ELEMENT,
+            anchorR,
+            XYWH(38, 0, 17, 18),
+            '',
+            '',
+            '',
+            SKINTYPE_NONE,
+            {
+                texture = 'classic/edit/special/color-arrow.png'
+            }
+        );
+
+        ELEMENT.background = getElementEX(
+            nil,
+            anchorNone,
+            XYWH(0, 0, ScrWidth, ScrHeight),
+            false,
+            {
+                colour1 = WHITEA()
+            }
+        );
+
+        ELEMENT.list = getElementEX(
+            ELEMENT.background,
+            anchorNone,
+            XYWH(getAbsX(ELEMENT), getAbsY(ELEMENT) + 20, 36, 131),
+            true,
+            {
+                colour1 = WHITEA()
+            }
+        );
+
+        ELEMENT.combo = getElementEX(
+            ELEMENT.list,
+            anchorNone,
+            XYWH(0, 0, 36, 131),
+            true,
+            {
+                texture = 'classic/edit/special/colors.png'
+            }
+        );
+
+        for i = 1, 9 do
+            local color = getElementEX(
+                ELEMENT.combo,
+                anchorNone,
+                XYWH(0, 4 + (i - 1) * 14, 36, 13),
+                true,
+                {
+                    colour1 = WHITEA()
+                }
+            );
+
+            set_Callback(color.ID, CALLBACK_MOUSEDOWN, 'OW_MULTIROOM_SET_MYCOLOUR(' .. (i - 1) .. '); setVisibleID(' .. ELEMENT.background.ID .. ', false);'); 
+        end;
+
+        set_Callback(ELEMENT.comboBox.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
+        set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
+        set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', false);');
+    end;
 end;
 
 function filesInMod(mod, directory)

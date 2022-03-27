@@ -744,6 +744,15 @@ function refreshPlayerView()
 	-- generate team names
 	for i = 2, 9 do
 		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
+			-- get team allowed positions
+			local allowedPositions = {};
+
+			for c = 1, MULTIPLAYER_ROOM_DATA.TEAMDEF[i].ASSIGNED_POSITIONS_COUNT do
+				if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].ASSIGNED_POSITIONS[c]) then
+					allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
+				end;
+			end;
+
 			teamLabel = getLabelEX(
 			    menu.window_multiplayer_room.panel.page1.playerSlots, 
 			    anchorT, 
@@ -799,8 +808,23 @@ function refreshPlayerView()
 					local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
 					local isMerged = isMerged(playerData.PLID, playerData.TEAM, playerData.TEAMPOS, playerMerged[playerData.TEAMPOS + 1]);
 					local slotExists = #playerSlots[i] >= playerData.TEAMPOS + 1;
+					local allowedNations = {};
 
-					-- clDebug(playerSlots[i]);
+					if (#allowedPositions > 0 and playerData.SIDE > 0) then
+						local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
+						
+						if (nations.US) then
+							allowedNations[1] = loc(810);
+						end;
+
+						if (nations.AR) then
+							allowedNations[2] = loc(811);
+						end;
+
+						if (nations.RU) then
+							allowedNations[3] = loc(812);
+						end;
+					end;
 
 					if (slotExists and isMerged) then
 						local id = parseInt(playerSlots[i][playerData.TEAMPOS + 1]);
@@ -809,7 +833,7 @@ function refreshPlayerView()
 							setTextID(id, getTextID(id) .. ' + ' .. playerData.NAME);
 						end;
 					else
-						posY = posY + 28;
+						posY = posY + 32;
 
 						local slot = getElementEX(
 							menu.window_multiplayer_room.panel.page1.playerSlots, 
@@ -818,7 +842,7 @@ function refreshPlayerView()
 								2,
 								posY, 
 								750,
-								24
+								28
 							),
 							true,
 							{
@@ -828,7 +852,7 @@ function refreshPlayerView()
 
 						local texture = 'notready';
 
-						if (playerData.PLID == 1 and playerData.READY == true) then
+						if (playerData.PLID == 1 and playerData.READY) then
 							texture = 'server';
 						elseif (playerData.READY == true) then
 							texture = 'ready';
@@ -839,7 +863,7 @@ function refreshPlayerView()
 							anchorLTRB,
 							XYWH(
 								4,
-								2, 
+								4, 
 								20,
 								20
 							),
@@ -854,7 +878,7 @@ function refreshPlayerView()
 							anchorLTRB,
 							XYWH(
 								28,
-								2, 
+								4, 
 								20,
 								20
 							),
@@ -871,7 +895,7 @@ function refreshPlayerView()
 						local slotPlayerName = getLabelEX(
 							slot,
 						    anchorT, 
-						    XYWH(50, 4, 260, 14),
+						    XYWH(50, 6, 220, 14),
 						    nil, 
 						    playerData.NAME, 
 						    {
@@ -887,11 +911,43 @@ function refreshPlayerView()
 
 						playerSlots[i] = addToArray(playerSlots[i], slotPlayerName.ID);
 
+						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or (MULTIPLAYER_ROOM_IS_HOST)), playerData.COLOUR, 277, 5);
+
+						local slotPosition = clComboBox(
+						    slot,
+						    336,
+						    3,
+						    allowedPositions,
+						    playerData.SIDE,
+						    'OW_MULTIROOM_SET_MYSIDE(INDEX);',
+						    {
+						        width = 150,
+						        texture = 'classic/edit/combobox-short.png',
+						        defaultLabel = loc(809),
+						        disabled = (not isMySlot)
+						    }
+						);
+
+						local slotNation = clComboBox(
+						    slot,
+						    488,
+						    3,
+						    allowedNations,
+						    playerData.NATION,
+						    'OW_MULTIROOM_SET_MYNATION(INDEX);',
+						    {
+						        width = 150,
+						        texture = 'classic/edit/combobox-short.png',
+						        defaultLabel = loc(809),
+						        disabled = (not isMySlot)
+						    }
+						);
+
 						if (isMySlot and not isMerged) then
 							local slotPlayerLock = clCheckbox(
 							    slot,
 							    659,
-							    4,
+							    6,
 							    'changeLockStatus(' .. boolToStr(not playerData.LOCKED) .. ');',
 							    {
 							        checked = playerData.LOCKED,
@@ -902,7 +958,7 @@ function refreshPlayerView()
 							local slotPlayerLockLabel = getLabelEX(
 							    slot,
 							    anchorLT,
-							    XYWH(678, 4, 160, 16),
+							    XYWH(678, 6, 160, 16),
 							    BankGotic_14, 
 							    loc(828),
 							    {
@@ -920,7 +976,7 @@ function refreshPlayerView()
 								local leavePlayer = clButton(
 								    slot, 
 								    660, 
-								    3, 
+								    5, 
 								    84,
 								    18, 
 								    loc(844), -- separate
@@ -931,11 +987,11 @@ function refreshPlayerView()
 								    	texture3 = 'classic/edit/menu_button_small_r.png'
 								    }
 								);
-							else
+							elseif (not playerData.LOCKED) then
 								local joinToPlayer = clButton(
 								    slot, 
 								    660, 
-								    3, 
+								    5, 
 								    84,
 								    18, 
 								    loc(839), -- join
