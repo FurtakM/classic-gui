@@ -470,8 +470,20 @@ function FROMOW_MULTIROOM_CONNSTATUS_NOTJOINED() -- Called by OW
 end;
 
 function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
-    destroyMultiplayer();
-    OW_IRC_DESTROY();
+    IN_LOBBY = false;
+	OW_IRC_DESTROY();
+	  	
+	MULTIPLAYER_ROOM_ACTIVE = false;
+	MULTIPLAYER_ROOM_MY_TEAM = 0;
+  	MULTIPLAYER_ROOM_IS_HOST = false;
+  	MULTIPLAYER_ROOM_IS_DEDI = false;
+  	MULTIPLAYER_ROOM_DATA = {};
+  	MULTIPLAYER_ROOM_MAP_DATA = {};
+
+  	setVisible(menu.window_multiplayer_room, false);
+
+  	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+  	clearAvatarCache();
 end;
 
 function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
