@@ -6,6 +6,7 @@ MULTIPLAYER_ROOM_IS_HOST = false;
 MULTIPLAYER_ROOM_IS_DEDI = false;
 MULTIPLAYER_ROOM_MY_TEAM = 0;
 MULTIPLAYER_ROOM_MY_PLID = 0;
+MULTIPLAYER_ROOM_IM_READY = false;
 
 menu.window_multiplayer_room = getElementEX(
     menu, 
@@ -54,6 +55,7 @@ menu.window_multiplayer_room.panel.changeAvatar = clButton(
     '',
     {}
 );
+
 
 menu.window_multiplayer_room.panel.start = clButton(
     menu.window_multiplayer_room.panel, 
@@ -463,10 +465,6 @@ function FROMOW_MULTIROOM_CONSTATUS_UPDATE(DATA)
 
 end;
 
-function FROMOW_SGUI_RESTART() -- Called just before SGUI is restarted
-	-- MULTIROOM_FREEAVATARS();
-end;
-
 function FROMOW_MULTIROOM_CONNSTATUS_NOTJOINED() -- Called by OW
 	hideMultiplayerGame();
 end;
@@ -480,8 +478,31 @@ function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
 
 end;
 
-
 -- main functions
+function startMultiplayerGame()
+    if OW_ROOM_LAUNCH_GAME() then
+        IN_LOBBY = false;
+		OW_IRC_DESTROY();
+  	  	
+		MULTIPLAYER_ROOM_ACTIVE = false;
+  	  	MULTIPLAYER_ROOM_MY_TEAM = 0;
+	  	MULTIPLAYER_ROOM_IS_HOST = false;
+	  	MULTIPLAYER_ROOM_IS_DEDI = false;
+	  	MULTIPLAYER_ROOM_DATA = {};
+	  	MULTIPLAYER_ROOM_MAP_DATA = {};
+
+	  	setVisible(menu.window_multiplayer_room, false);
+
+	  	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+	  	clearAvatarCache();
+    end;
+end;
+
+function setReadyMultiplayerGame()
+	local ready = (not MULTIPLAYER_ROOM_IM_READY);
+	OW_MULTIROOM_SET_MYREADY(ready);
+end;
+
 function showMultiplayerGame()
   	IN_LOBBY = false;	
   	MULTIPLAYER_ROOM_ACTIVE = true;
@@ -493,6 +514,15 @@ function showMultiplayerGame()
 
   	-- set player nickname
   	setText(menu.window_multiplayer_room.panel.playerName, getPlayerName());
+
+  	-- set button
+  	if MULTIPLAYER_ROOM_IS_HOST then
+  		setText(menu.window_multiplayer_room.panel.start, loc(804));
+  		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
+  	else
+  		setText(menu.window_multiplayer_room.panel.start, loc(818));
+  		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+  	end;
 end;
 
 function hideMultiplayerGame()
@@ -873,6 +903,11 @@ function refreshPlayerView()
 							}
 						);
 
+						if (isMySlot and (not MULTIPLAYER_ROOM_IS_HOST)) then
+							MULTIPLAYER_ROOM_IM_READY = playerData.READY;
+							set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+						end;
+
 						local slotPlayerAvatar = getElementEX(
 							slot, 
 							anchorLTRB,
@@ -1068,4 +1103,12 @@ function resetPlayerData(resetColour)
 
 	OW_MULTIROOM_SET_MYSIDE(0);
 	OW_MULTIROOM_SET_MYNATION(0);
+end;
+
+function init_specBars()
+
+end;
+
+function initalizeDiplomacy()
+
 end;
