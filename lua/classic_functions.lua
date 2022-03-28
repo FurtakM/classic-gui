@@ -1378,11 +1378,15 @@ function clTextBox(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES)
         PROPERTIES.font_name = ADMUI3L;
     end;
 
+    if PROPERTIES.visible == nil then
+        PROPERTIES.visible = true;
+    end;
+
     PROPERTIES.text = TEXT;
     PROPERTIES.wordwrap = true;
     PROPERTIES.scissor = true;
 
-    return getElementEX(PARENT, ANCHOR, POSSIZE, true, PROPERTIES);
+    return getElementEX(PARENT, ANCHOR, POSSIZE, PROPERTIES.visible, PROPERTIES);
 end;
 
 function clTextBoxWithTexture(PARENT, ANCHOR, POSSIZE, TEXT, PROPERTIES, CALLBACKS)

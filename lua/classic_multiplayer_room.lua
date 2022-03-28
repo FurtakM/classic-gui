@@ -163,7 +163,7 @@ menu.window_multiplayer_room.panel.chatInput = getEditEX(
     }
 );
 
-textBoxTest = clTextBox(nil, anchorLTRB, XYWH(1, 1, 1, 1), 'test', {});
+textBoxTest = clTextBox(nil, anchorLTRB, XYWH(1, 1, 1, 1), 'test', {visible = false});
 
 -- lower panel
 menu.window_multiplayer_room.panel.page1Button = getElementEX(
