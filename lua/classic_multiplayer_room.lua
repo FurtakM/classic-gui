@@ -246,14 +246,47 @@ menu.window_multiplayer_room.panel.page1 = getElementEX(
 	}
 );
 
-menu.window_multiplayer_room.panel.page1.playerSlots = getElementEX(
-	menu.window_multiplayer_room.panel.page1, 
-	anchorLTRB,
-	XYWH(
+menu.window_multiplayer_room.panel.page1.scroll = getScrollboxEX(
+    menu.window_multiplayer_room.panel.page1, 
+    anchorNone, 
+    XYWH(
 		8, 
 		8,
+		768,
+		320
+	),
+    {
+        colour1 = WHITEA()
+    }
+);
+
+set_Property(menu.window_multiplayer_room.panel.page1.scroll.ID, PROP_AUTOHIDESCROLL, false);
+
+menu.window_multiplayer_room.panel.page1.scrollBar = clScrollBarEX2(
+    menu.window_multiplayer_room.panel.page1,
+    anchorNone,
+    XYWH(
+        762, 
+        menu.window_multiplayer_room.panel.page1.scroll.y + 6, 
+        12,
+        menu.window_multiplayer_room.panel.page1.scroll.height - 6 
+    ), 
+    menu.window_multiplayer_room.panel.page1.scroll, 
+    SKINTYPE_NONE,
+    false,
+    {
+        visible = true
+    }
+);
+
+menu.window_multiplayer_room.panel.page1.playerSlots = getElementEX(
+	menu.window_multiplayer_room.panel.page1.scroll, 
+	anchorLTRB,
+	XYWH(
+		0, 
+		0,
 		750,
-		470
+		300
 	),
 	true,
 	{
@@ -261,12 +294,28 @@ menu.window_multiplayer_room.panel.page1.playerSlots = getElementEX(
 	}
 );
 
+menu.window_multiplayer_room.panel.page1.spectatorSlots = getElementEX(
+	menu.window_multiplayer_room.panel.page1, 
+	anchorLTRB,
+	XYWH(
+		8, 
+		340,
+		762,
+		146
+	),
+	true,
+	{
+		colour1 = WHITEA()
+	}
+);
+
+
 -- check init player slots
 
 menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 	menu.window_multiplayer_room.panel.page1,
     anchorT, 
-    XYWH(778, 9, 240, 12),
+    XYWH(782, 9, 240, 12),
     nil, 
     loc(846), -- player list
     {
@@ -282,7 +331,7 @@ menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 
 menu.window_multiplayer_room.panel.page1.playerListKick = clButton(
     menu.window_multiplayer_room.panel.page1,
-    804, 
+    808, 
     338, 
     156,
     30, 
@@ -293,7 +342,7 @@ menu.window_multiplayer_room.panel.page1.playerListKick = clButton(
 
 menu.window_multiplayer_room.panel.page1.playerList = clListBox(
 	menu.window_multiplayer_room.panel.page1, 
-	XYWH(778, 24, 224, 312), 
+	XYWH(782, 24, 224, 312), 
 	{}, 
 	1, 
 	'', 
@@ -544,6 +593,7 @@ function hideMultiplayerGame()
 
 	IN_LOBBY = true;	
 	MULTIPLAYER_ROOM_ACTIVE = false;
+
   	setVisible(menu.window_multiplayer_room, false);
   	setVisible(menu.window_multiplayer, true);
 
@@ -762,6 +812,7 @@ function refreshPlayerView()
 	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
 	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
 	local playerSlots  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage player slots id's
+	local teamCounter  = 0;
 
 	if (#MULTIPLAYER_ROOM_DATA.Players > 0) then
 		-- get my plid
@@ -786,6 +837,8 @@ function refreshPlayerView()
 	-- generate team names
 	for i = 2, 9 do
 		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
+			teamCounter = teamCounter + 1;
+
 			-- get team allowed positions
 			local allowedPositions = {};
 
@@ -795,7 +848,7 @@ function refreshPlayerView()
 				end;
 			end;
 
-			teamLabel = getLabelEX(
+			local teamLabel = getLabelEX(
 			    menu.window_multiplayer_room.panel.page1.playerSlots, 
 			    anchorT, 
 			    XYWH(10, posY, menu.window_multiplayer_room.panel.page1.playerSlots.width - 10, 18), 
@@ -813,7 +866,7 @@ function refreshPlayerView()
 			posY = posY + 26;
 
 			if (i == MULTIPLAYER_ROOM_MY_TEAM) then
-				teamBtn = clButton(
+				local teamBtn = clButton(
 				    menu.window_multiplayer_room.panel.page1.playerSlots, 
 				    304, 
 				    posY, 
@@ -828,7 +881,7 @@ function refreshPlayerView()
 				    }
 				);
 			else
-				teamBtn = clButton(
+				local teamBtn = clButton(
 				    menu.window_multiplayer_room.panel.page1.playerSlots, 
 				    304, 
 				    posY, 
@@ -1057,6 +1110,83 @@ function refreshPlayerView()
 
 			posY = posY + 38;
 		end;
+	end;
+
+	-- spectator
+	if MULTIPLAYER_ROOM_DATA.MULTIMAP.CANSPEC and #MULTIPLAYER_ROOM_DATA.TEAMDEF >= 10 then
+		local specLabel = getLabelEX(
+		    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+		    anchorT, 
+		    XYWH(10, 0, menu.window_multiplayer_room.panel.page1.spectatorSlots.width - 22, 18), 
+		    Tahoma_18B, 
+		    loc(1113),
+		    {
+		        wordwrap = true,
+		        text_halign = ALIGN_MIDDLE,
+		        text_valign = ALIGN_TOP,
+		        font_colour = RGB(231, 222, 214),
+		        shadowtext = true
+		    }
+		);
+
+		if (MULTIPLAYER_ROOM_MY_TEAM == 10) then
+			local teamBtn = clButton(
+			    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+			    304, 
+			    26, 
+			    150,
+			    18, 
+			    loc(825), -- leave
+			    'leaveTeam();',
+			    {
+			    	texture = 'classic/edit/menu_button_small_l.png',
+			    	texture2 = 'classic/edit/menu_button_small_c.png',
+			    	texture3 = 'classic/edit/menu_button_small_r.png'
+			    }
+			);
+		else
+			local teamBtn = clButton(
+			    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+			    304, 
+			    26, 
+			    150,
+			    18, 
+			    loc(839), -- join
+			    'joinToTeam(10, -1);',
+			    {
+			    	texture = 'classic/edit/menu_button_small_l.png',
+			    	texture2 = 'classic/edit/menu_button_small_c.png',
+			    	texture3 = 'classic/edit/menu_button_small_r.png'
+			    }
+			);
+		end;
+
+		posY = 50;
+
+		for i = 1, 3 do
+			local slot = getElementEX(
+				menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+				anchorLTRB,
+				XYWH(
+					2,
+					posY, 
+					750,
+					28
+				),
+				true,
+				{
+					texture = 'classic/edit/multiroom/player_slot.png'
+				}
+			);
+
+			posY = posY + 32;
+		end;
+	end;
+
+	if (teamCounter < 5) then
+		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
+	else
+		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
 	end;
 end;
 
