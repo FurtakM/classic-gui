@@ -443,6 +443,8 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA.TEAMDEF = DATA.TEAMDEF;
 	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
+
+	generateMapSettings(DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -491,7 +493,10 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
-	--debug('FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS');
+	--MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS = DATA.MAPPARAMS;
+	-- TODO
+	--clDebug(MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS);
+	--generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
@@ -531,7 +536,7 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
 
   	setVisible(menu.window_multiplayer_room, false);
 
-  	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+  	deleteSlots();
   	clearAvatarCache();
 end;
 
@@ -554,7 +559,7 @@ function startMultiplayerGame()
 
 	  	setVisible(menu.window_multiplayer_room, false);
 
-	  	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+	  	deleteSlots();
 	  	clearAvatarCache();
     end;
 end;
@@ -603,7 +608,7 @@ function hideMultiplayerGame()
   	MULTIPLAYER_ROOM_DATA = {};
   	MULTIPLAYER_ROOM_MAP_DATA = {};
 
-  	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+  	deleteSlots();
   	clearAvatarCache();
 end;
 
@@ -655,45 +660,6 @@ function multiRoomChangePage(page)
 	setVisible({ID=pages[page].page}, true);
 
 	MULTIPLAYER_ROOM_ACTIVE_PAGE = page;
-end;
-
-function setMultiplayerOption(PARENT, OPTION, INDEX)
-	getLabelEX(
-	    PARENT,
-	    anchorT, 
-	    XYWH(
-	    	10 + (((INDEX - 1) % 3) * 240),
-	    	6 + (math.floor((INDEX - 1) / 3) * 60),
-	    	240,
-	    	14
-	    ), 
-	    nil,
-	    OPTION.name,
-	    {
-	        font_colour = WHITE(),
-            nomouseevent = true,
-            font_name = BankGotic_14
-	    }
-	);
-	
-	clComboBox(
-	    PARENT,
-	    10 + (((INDEX - 1) % 3) * 240),
-	    24 + (math.floor((INDEX - 1) / 3) * 60),
-	    OPTION.list,
-	    OPTION.default + 1,
-	    'changeMultiplayerOption(' .. OPTION.id .. ', "INDEX")',
-	    {
-	        
-	    }
-	);
-
-	-- set default value
-	changeMultiplayerOption(OPTION.id, OPTION.default + 1);
-end;
-
-function changeMultiplayerOption(ID, INDEX)
-	-- todo
 end;
 
 function selectPlayerOnPlayerList(INDEX)
@@ -807,7 +773,7 @@ end;
 
 -- generate SGUI slots for players
 function refreshPlayerView()
-	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+	deleteSlots();
 
 	local teamPlayers  = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which storage data which player is in which team
 	local playerMerged = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }; -- array which contain merged players
@@ -1163,23 +1129,92 @@ function refreshPlayerView()
 
 		posY = 50;
 
-		for i = 1, 3 do
-			local slot = getElementEX(
-				menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-				anchorLTRB,
-				XYWH(
-					2,
-					posY, 
-					750,
-					28
-				),
-				true,
-				{
-					texture = 'classic/edit/multiroom/player_slot.png'
-				}
-			);
+		if (#teamPlayers[10] > 0) then
+			for p = 1, #teamPlayers[10] do
+				local playerData = MULTIPLAYER_ROOM_DATA.Players[teamPlayers[10][p]];
+				local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
 
-			posY = posY + 32;
+				local slot = getElementEX(
+					menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+					anchorLTRB,
+					XYWH(
+						2,
+						posY, 
+						750,
+						28
+					),
+					true,
+					{
+						texture = 'classic/edit/multiroom/player_slot.png'
+					}
+				);
+
+				local texture = 'notready';
+
+				if (playerData.PLID == 1 and playerData.READY) then
+					texture = 'server';
+				elseif (playerData.READY == true) then
+					texture = 'ready';
+				end;
+
+				local slotPlayerStatus = getElementEX(
+					slot, 
+					anchorLTRB,
+					XYWH(
+						4,
+						4, 
+						20,
+						20
+					),
+					true,
+					{
+						texture = 'classic/edit/special/' .. texture .. '.png'
+					}
+				);
+
+				if (isMySlot and (not MULTIPLAYER_ROOM_IS_HOST)) then
+					MULTIPLAYER_ROOM_IM_READY = playerData.READY;
+					set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+				end;
+
+				local slotPlayerAvatar = getElementEX(
+					slot, 
+					anchorLTRB,
+					XYWH(
+						28,
+						4, 
+						20,
+						20
+					),
+					true,
+					{
+						texture = 'Avatars/unknow.png'
+					}
+				);
+
+				if (playerData.AVATAR_COMPONENT) then
+					SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_COMPONENT, 80, 100, 80, 100);
+				end;
+
+				local slotPlayerName = getLabelEX(
+					slot,
+				    anchorT, 
+				    XYWH(50, 6, 220, 14),
+				    nil, 
+				    playerData.NAME, 
+				    {
+						nomouseevent = true,
+				        font_colour = WHITE(),
+				        font_name = BankGotic_14,
+				        wordwrap = false,
+				        text_halign = ALIGN_TOP,
+				        text_valign = ALIGN_LEFT,
+				        scissor = true
+				 	}
+				);
+
+				posY = posY + 32;
+			end;
 		end;
 	end;
 
@@ -1188,6 +1223,11 @@ function refreshPlayerView()
 	else
 		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
 	end;
+end;
+
+function deleteSlots()
+	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.playerSlots.ID);
+	sgui_deletechildren(menu.window_multiplayer_room.panel.page1.spectatorSlots.ID);
 end;
 
 function isMerged(plid, team, teamPos, mergedPlayers)
@@ -1245,6 +1285,76 @@ function resetPlayerData(resetColour)
 
 	OW_MULTIROOM_SET_MYSIDE(0);
 	OW_MULTIROOM_SET_MYNATION(0);
+end;
+
+--[[
+	TYPE:
+		0: none
+		1: unknown
+		2: comboBox
+		3: slider
+		4: comboBox
+]]--
+function generateMapSettings(SETTINGS, IS_HOST)
+	local parent = menu.window_multiplayer_room.panel.page2;
+	local counter = 1;
+
+	for i = 1, SETTINGS.MAPPARAMCOUNT do
+		local param = SETTINGS.MAPPARAMS[i];
+
+		if param.TYPE == 0 then
+			goto continue;
+		end;
+
+		local option = {
+			ID = i,
+			LIST = param.ITEMS.NAMES,
+			DEFAULT = param.VALUE,
+			NAME = param.NAME,
+			HINT = param.ITEMS.HINTS[param.VALUE]
+		};
+
+		setMultiplayerOption(parent, option, counter, not IS_HOST);
+		counter = counter + 1;
+		::continue::
+	end;
+end;
+
+function setMultiplayerOption(PARENT, OPTION, INDEX, MODIFIABLE)
+	getLabelEX(
+	    PARENT,
+	    anchorT, 
+	    XYWH(
+	    	10 + (((INDEX - 1) % 4) * 240),
+	    	6 + (math.floor((INDEX - 1) / 4) * 60),
+	    	240,
+	    	14
+	    ), 
+	    nil,
+	    OPTION.NAME,
+	    {
+	        font_colour = WHITE(),
+            nomouseevent = true,
+            font_name = BankGotic_14
+	    }
+	);
+	
+	clComboBox(
+	    PARENT,
+	    10 + (((INDEX - 1) % 4) * 240),
+	    24 + (math.floor((INDEX - 1) / 4) * 60),
+	    OPTION.LIST,
+	    OPTION.DEFAULT + 1,
+	    'changeMultiplayerOption(' .. OPTION.ID .. ', "INDEX")',
+	    {
+	        hint = OPTION.HINT,
+	        disabled = MODIFIABLE
+	    }
+	);
+end;
+
+function changeMultiplayerOption(ID, INDEX)
+	OW_MULTIROOM_HOST_SET_MAPPARAM(ID, INDEX);
 end;
 
 function init_specBars()

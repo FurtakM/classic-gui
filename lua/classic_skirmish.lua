@@ -294,6 +294,10 @@ menu.window_skirmish_popup.panel.cancel = clButton(
 
 function showSkirmishWindow(MODE)
 	if MODE == 1 then
+		if parseInt(OW_SAVENEXIT_CHECK()) == 2 then
+	        return;
+	    end;
+	    
 		showMenuButton(0);
 		setVisible(menu.window_skirmish, true);
 		reloadSkirmishList();
