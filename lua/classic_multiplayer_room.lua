@@ -493,18 +493,19 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
-	--MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS = DATA.MAPPARAMS;
-	-- TODO
-	--clDebug(MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS);
-	--generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
+	for i = 1, DATA.MAPPARAMCOUNT do
+		MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i].VALUE = DATA.MAPPARAMS[i]; 
+	end;
+
+	generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
-	--debug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
+	clDebug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
 end;
 
 function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
-	--debug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
+	clDebug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
@@ -516,7 +517,7 @@ function FROMOW_MULTI_PINGED(DATA)
 end;
 
 function FROMOW_MULTIROOM_CONSTATUS_UPDATE(DATA)
-
+	clDebug('FROMOW_MULTIROOM_CONSTATUS_UPDATE');
 end;
 
 function FROMOW_MULTIROOM_CONNSTATUS_NOTJOINED() -- Called by OW
@@ -1287,6 +1288,7 @@ function resetPlayerData(resetColour)
 	OW_MULTIROOM_SET_MYNATION(0);
 end;
 
+-- PAGE #2
 --[[
 	TYPE:
 		0: none
@@ -1298,6 +1300,8 @@ end;
 function generateMapSettings(SETTINGS, IS_HOST)
 	local parent = menu.window_multiplayer_room.panel.page2;
 	local counter = 1;
+
+	sgui_deletechildren(parent.ID);
 
 	for i = 1, SETTINGS.MAPPARAMCOUNT do
 		local param = SETTINGS.MAPPARAMS[i];
@@ -1354,9 +1358,23 @@ function setMultiplayerOption(PARENT, OPTION, INDEX, MODIFIABLE)
 end;
 
 function changeMultiplayerOption(ID, INDEX)
-	OW_MULTIROOM_HOST_SET_MAPPARAM(ID, INDEX);
+	OW_MULTIROOM_HOST_SET_MAPPARAM(ID - 1, INDEX - 1); -- for some reason it must be -1 lol..
 end;
 
+
+-- PAGE #3
+
+
+
+
+
+
+
+
+
+
+-- override functions
+-- @TODO
 function init_specBars()
 
 end;
