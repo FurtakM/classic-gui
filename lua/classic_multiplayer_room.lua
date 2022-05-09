@@ -501,11 +501,11 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
-	clDebug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
+	-- clDebug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
 end;
 
 function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
-	clDebug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
+	-- clDebug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
@@ -517,7 +517,7 @@ function FROMOW_MULTI_PINGED(DATA)
 end;
 
 function FROMOW_MULTIROOM_CONSTATUS_UPDATE(DATA)
-	clDebug('FROMOW_MULTIROOM_CONSTATUS_UPDATE');
+	-- clDebug('FROMOW_MULTIROOM_CONSTATUS_UPDATE');
 end;
 
 function FROMOW_MULTIROOM_CONNSTATUS_NOTJOINED() -- Called by OW
@@ -995,20 +995,22 @@ function refreshPlayerView()
 						    }
 						);
 
-						local slotNation = clComboBox(
-						    slot,
-						    488,
-						    3,
-						    allowedNations,
-						    playerData.NATION,
-						    'OW_MULTIROOM_SET_MYNATION(INDEX);',
-						    {
-						        width = 150,
-						        texture = 'classic/edit/combobox-short.png',
-						        defaultLabel = loc(809),
-						        disabled = (not isMySlot)
-						    }
-						);
+						if (not MULTIPLAYER_ROOM_DATA.MULTIMAP.RANDOMNATIONS) then
+							local slotNation = clComboBox(
+							    slot,
+							    488,
+							    3,
+							    allowedNations,
+							    playerData.NATION,
+							    'OW_MULTIROOM_SET_MYNATION(INDEX);',
+							    {
+							        width = 150,
+							        texture = 'classic/edit/combobox-short.png',
+							        defaultLabel = loc(809),
+							        disabled = (not isMySlot)
+							    }
+							);
+						end;
 
 						if (isMySlot and not isMerged) then
 							local slotPlayerLock = clCheckbox(
@@ -1363,13 +1365,50 @@ end;
 
 
 -- PAGE #3
+mapNameLabel = getLabelEX(
+    menu.window_multiplayer_room.panel.page3,
+    anchorT, 
+    XYWH(
+    	12,
+    	12,
+    	120,
+    	14
+    ), 
+    nil,
+   	loc(540),
+    {
+        font_colour = WHITE(),
+        nomouseevent = true,
+        font_name = BankGotic_14
+    }
+);
 
+mapComboBox = clComboBox(
+    menu.window_multiplayer_room.panel.page3,
+    10,
+    30,
+    {},
+    0,
+    '',
+    {
+    	texture = 'classic/edit/combobox-text.png',
+    	textureList = 'classic/edit/combobox-list.png',
+    	width = 447,
+    	widthList = 447,
+    	trimLength = 44
+    }
+);
 
+function getMapPicture(mapName)
+	if mapName == nil or mapName == '' then
+		mapName = 'skirmish_unknown.png';
+	else
+		mapName = '%missions%/_multiplayer/' .. mapName .. '/mappic.png'
+	end;
 
-
-
-
-
+	setTexture(Multi_Room.MapBox.MapImage,mapPic);
+	setTextureFallback(Multi_Room.MapBox.MapImage, 'skirmish_unknown.png');
+end;
 
 
 
