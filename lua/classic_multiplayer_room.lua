@@ -508,6 +508,15 @@ function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
 	-- clDebug('FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK');
 end;
 
+function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
+	MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS  = UNRANKED.MAPLIST;
+	MULTIPLAYER_ROOM_DATA.UNRANKED_COUNT = UNRANKED.MAPLISTCOUNT;
+	MULTIPLAYER_ROOM_DATA.RANKED_MAPS    = RANKED.MAPLIST;
+	MULTIPLAYER_ROOM_DATA.RANKED_COUNT   = RANKED.MAPLISTCOUNT;
+
+	setMapList(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS, 1);
+end;
+
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
     hideMultiplayerGame();
 end;
@@ -1365,7 +1374,7 @@ end;
 
 
 -- PAGE #3
-mapNameLabel = getLabelEX(
+menu.window_multiplayer_room.panel.page3.mapNameLabel = getLabelEX(
     menu.window_multiplayer_room.panel.page3,
     anchorT, 
     XYWH(
@@ -1383,21 +1392,56 @@ mapNameLabel = getLabelEX(
     }
 );
 
-mapComboBox = clComboBox(
-    menu.window_multiplayer_room.panel.page3,
-    10,
-    30,
-    {},
-    0,
-    '',
-    {
-    	texture = 'classic/edit/combobox-text.png',
-    	textureList = 'classic/edit/combobox-list.png',
-    	width = 447,
-    	widthList = 447,
-    	trimLength = 44
-    }
+menu.window_multiplayer_room.panel.page3.mapComboBox = getElementEX(
+	menu.window_multiplayer_room.panel.page3, 
+	anchorLTRB,
+	XYWH(
+		10,
+		30,
+		447,
+		270
+	),
+	true,
+	{
+		colour1 = WHITEA()
+	}
 );
+
+function setMapList(mapList, selectedMap)
+	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.mapComboBox.ID);
+
+	local list = {};
+
+	for i = 1, #mapList do
+		list = addToArray(list, mapList[i].NAMELOC);
+	end;
+
+	menu.window_multiplayer_room.panel.page3.mapComboBox.list = clComboBox(
+	    menu.window_multiplayer_room.panel.page3.mapComboBox,
+	    0,
+	    0,
+	    list,
+	    selectedMap,
+	    'selectMap(INDEX);',
+	    {
+	    	texture = 'classic/edit/combobox-text.png',
+	    	textureList = 'classic/edit/combobox-list.png',
+	    	width = 447,
+	    	widthList = 447,
+	    	trimLength = 44
+	    }
+	);
+end;
+
+function selectMap(INDEX)
+	INDEX = parseInt(INDEX);
+
+	local mapName = MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[INDEX].NAME;
+	local gameType = ''; -- TODO
+
+	OW_MULTIROOM_HOST_SET_MAP(mapName, gameType);
+end;
+
 
 function getMapPicture(mapName)
 	if mapName == nil or mapName == '' then

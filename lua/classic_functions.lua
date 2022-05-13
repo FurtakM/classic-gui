@@ -793,7 +793,8 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
             ELEMENT.comboBox.selected.label.ID,
             PROPERTIES.textureButton,
             PROPERTIES.textureButtonClick,
-            CALLBACK
+            CALLBACK,
+            PROPERTIES
         ));
     end;
 
@@ -819,7 +820,7 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     return ELEMENT;
 end;
 
-function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK)
+function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK, PROPERTIES)
     CALLBACK = string.gsub(CALLBACK, "%VALUE", VALUE);
     CALLBACK = string.gsub(CALLBACK, "%INDEX", INDEX);
 
@@ -829,10 +830,14 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         colour = RGB(191, 191, 191);
     end;
 
+    if PROPERTIES.width == nil then
+        PROPERTIES.width = 234;
+    end;
+
     local item = getElementEX(
         PARENT,
         anchorLTRB,
-        XYWH(3, 15 * (INDEX - 1), 207, 15),
+        XYWH(3, 15 * (INDEX - 1), PROPERTIES.width - 27, 15),
         true,
         {
             hint = VALUE,
@@ -846,7 +851,7 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
     item.label = getLabelEX(
         item,
         anchorLTRB,
-        XYWH(0, 0, 207, 15),
+        XYWH(0, 0, PROPERTIES.width - 27, 15),
         nil,
         SGUI_widesub(VALUE, 1, 22),
         {
