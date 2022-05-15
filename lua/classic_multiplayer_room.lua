@@ -10,6 +10,15 @@ MULTIPLAYER_ROOM_MY_TEAM = 0;
 MULTIPLAYER_ROOM_MY_PLID = 0;
 MULTIPLAYER_ROOM_IM_READY = false;
 
+MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
+MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
+MULTIPLAYER_OPTION_RANDOM_NATIONS = 60;
+MULTIPLAYER_OPTION_LOCK_TEAMS = 55;
+MULTIPLAYER_OPTION_RANDKED = 51;
+MULTIPLAYER_OPTION_LOCK_GAME = 57;
+MULTIPLAYER_OPTION_LIMIT_TECH = 56;
+
+
 menu.window_multiplayer_room = getElementEX(
     menu, 
     anchorNone, 
@@ -130,7 +139,22 @@ menu.window_multiplayer_room.panel.status = getLabelEX(
         text_halign = ALIGN_TOP,	
         text_valign = ALIGN_LEFT,
     }
-); 
+);
+
+menu.window_multiplayer_room.panel.globalSettings = getElementEX(
+	menu.window_multiplayer_room.panel, 
+	anchorLTRB,
+	XYWH(
+		180, 
+		47, 
+		212,
+		130
+	),
+	true,
+	{
+		colour1 = WHITEA()
+	}
+);
 
 -- chat
 menu.window_multiplayer_room.panel.chat = clTextBoxWithTexture(
@@ -313,7 +337,6 @@ menu.window_multiplayer_room.panel.page1.spectatorSlots = getElementEX(
 
 
 -- check init player slots
-
 menu.window_multiplayer_room.panel.page1.playerListDescription = getLabelEX(
 	menu.window_multiplayer_room.panel.page1,
     anchorT, 
@@ -448,7 +471,7 @@ DATA Breakdown
 
 	generateMapSettings(DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
 	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, MULTIPLAYER_ROOM_IS_HOST);
-	setMapPicture(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME);
+	setMapPictureDescription(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME);
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -484,6 +507,7 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
 
 	refreshPlayerView();
+	setMapList(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_IS_HOST);
 end;
 
 -- trigger each when map is changed
@@ -498,10 +522,14 @@ end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 	for i = 1, DATA.MAPPARAMCOUNT do
-		MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i].VALUE = DATA.MAPPARAMS[i]; 
+		if MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i] ~= nil then
+			MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i].VALUE = DATA.MAPPARAMS[i];
+		end;
 	end;
 
-	generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
+	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
+		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
+	end;
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
@@ -517,8 +545,6 @@ function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
 	MULTIPLAYER_ROOM_DATA.UNRANKED_COUNT = UNRANKED.MAPLISTCOUNT;
 	MULTIPLAYER_ROOM_DATA.RANKED_MAPS    = RANKED.MAPLIST;
 	MULTIPLAYER_ROOM_DATA.RANKED_COUNT   = RANKED.MAPLISTCOUNT;
-
-	setMapList(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_IS_HOST);
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
@@ -603,6 +629,35 @@ function showMultiplayerGame()
   		setText(menu.window_multiplayer_room.panel.start, loc(818));
   		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
   	end;
+
+  	-- global multiroom settings
+	menu.window_multiplayer_room.panel.ready = clCheckbox(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    0,
+	    'setReadyMultiplayerGame();',
+	    {
+	        checked = MULTIPLAYER_ROOM_IM_READY or MULTIPLAYER_ROOM_IS_HOST,
+	        disabled = MULTIPLAYER_ROOM_IS_HOST
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.readyLabel = getLabelEX(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 0, 199, 16),
+	    BankGotic_14, 
+	    loc(818),
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
+	);
 end;
 
 function hideMultiplayerGame()
@@ -1318,7 +1373,7 @@ function generateMapSettings(SETTINGS, IS_HOST)
 
 	sgui_deletechildren(parent.ID);
 
-	for i = 1, SETTINGS.MAPPARAMCOUNT do
+	for i = 1, 51 do --SETTINGS.MAPPARAMCOUNT do
 		local param = SETTINGS.MAPPARAMS[i];
 
 		if (param.TYPE == 0 or param.NAME == '') then
@@ -1415,7 +1470,7 @@ menu.window_multiplayer_room.panel.page3.gameTypeLabel = getLabelEX(
     menu.window_multiplayer_room.panel.page3,
     anchorT, 
     XYWH(
-    	768,
+    	558,
     	12,
     	120,
     	14
@@ -1433,9 +1488,9 @@ menu.window_multiplayer_room.panel.page3.gameTypeComboBox = getElementEX(
 	menu.window_multiplayer_room.panel.page3, 
 	anchorLTRB,
 	XYWH(
-		766,
+		556,
 		30,
-		236,
+		447,
 		270
 	),
 	true,
@@ -1459,8 +1514,29 @@ menu.window_multiplayer_room.panel.page3.mapPic = getElementEX(
 	}
 );
 
+menu.window_multiplayer_room.panel.page3.description = getLabelEX(
+	menu.window_multiplayer_room.panel.page3,
+    anchorT, 
+    XYWH(556, 60, 447, 596),
+    nil, 
+    '',
+    {
+		nomouseevent = true,
+        font_colour = WHITE(),
+        font_name = ADMUI3L,
+        wordwrap = true,
+        text_halign = ALIGN_LEFT,
+        text_valign = ALIGN_TOP,
+        scissor = true
+ 	}
+);
+
 function setMapList(mapList, selectedMap, isHost)
 	sgui_deletechildren(menu.window_multiplayer_room.panel.page3.mapComboBox.ID);
+
+	if (mapList == nil) then
+		return;
+	end;
 
 	local list = {};
 
@@ -1506,6 +1582,11 @@ function setGameTypeList(INDEX, selectedGameType, isHost)
 	    selectedGameType,
 	    'selectGameType(INDEX);',
 	    {
+	    	texture = 'classic/edit/combobox-text.png',
+	    	textureList = 'classic/edit/combobox-list.png',
+	    	width = 447,
+	    	widthList = 447,
+	    	trimLength = 66,
 	    	trimFrom = 3,
 	    	disabled = (not isHost)
 	    }
@@ -1534,7 +1615,7 @@ function selectGameType(INDEX)
 	OW_MULTIROOM_HOST_SET_MAP(mapName, gameType);
 end;
 
-function setMapPicture(mapName)
+function setMapPictureDescription(mapName)
 	local picture = '';
 
 	if mapName == nil or mapName == '' then
@@ -1545,6 +1626,11 @@ function setMapPicture(mapName)
 
 	setTexture(menu.window_multiplayer_room.panel.page3.mapPic, picture);
 	setTextureFallback(menu.window_multiplayer_room.panel.page3.mapPic, 'skirmish_unknown.png');
+
+	local description = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.DESCRIPTION, ': '), 2);
+	local rules = SGUI_widesub(splitstringfirst(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 3) .. ':\n' .. SGUI_widesub(splitstringrest(MULTIPLAYER_ROOM_DATA.MULTIMAP.RULES, ': '), 2);
+
+	setText(menu.window_multiplayer_room.panel.page3.description, description .. '\n\n' .. rules);
 end;
 
 
