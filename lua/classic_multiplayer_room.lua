@@ -469,9 +469,9 @@ DATA Breakdown
 	MULTIPLAYER_ROOM_DATA.TeamGame = getTeamGame(DATA.TEAMDEF);
 	MULTIPLAYER_ROOM_DATA.MaxPlayers = getPlayersCount(DATA.TEAMDEF, DATA.SIDEDEF, MULTIPLAYER_ROOM_DATA.TeamGame);
 
-	generateMapSettings(DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
-	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, MULTIPLAYER_ROOM_IS_HOST);
-	setMapPictureDescription(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME);
+	generateMapSettings(DATA.MULTIMAP, canModifyServerSettings());
+	setGameTypeList(MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX, canModifyServerSettings());
+	setMapPictureDescription(MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME);
 end;
 
 function FROMOW_MULTIROOM_TEAMLIST(DATA)
@@ -502,12 +502,12 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	MULTIPLAYER_ROOM_DATA.PlayerMyPos = DATA.PLAYERSMYPOS;
 	MULTIPLAYER_ROOM_DATA.Players = DATA.PLAYERS;
 
-	updateHostVisibilitySettings(MULTIPLAYER_ROOM_IS_HOST);
+	updateHostVisibilitySettings(canModifyServerSettings());
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
 
 	refreshPlayerView();
-	setMapList(MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, MULTIPLAYER_ROOM_IS_HOST);
+	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
 end;
 
 -- trigger each when map is changed
@@ -528,7 +528,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 	end;
 
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
-		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, MULTIPLAYER_ROOM_IS_HOST);
+		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
 	end;
 end;
 
@@ -541,10 +541,22 @@ function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
-	MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS  = UNRANKED.MAPLIST;
-	MULTIPLAYER_ROOM_DATA.UNRANKED_COUNT = UNRANKED.MAPLISTCOUNT;
-	MULTIPLAYER_ROOM_DATA.RANKED_MAPS    = RANKED.MAPLIST;
-	MULTIPLAYER_ROOM_DATA.RANKED_COUNT   = RANKED.MAPLISTCOUNT;
+	--MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS  = UNRANKED.MAPLIST;
+	--MULTIPLAYER_ROOM_DATA.UNRANKED_COUNT = UNRANKED.MAPLISTCOUNT;
+	--MULTIPLAYER_ROOM_DATA.RANKED_MAPS    = RANKED.MAPLIST;
+	--MULTIPLAYER_ROOM_DATA.RANKED_COUNT   = RANKED.MAPLISTCOUNT;
+
+	if (MULTIPLAYER_ALLOWED_MAPS == nil) then
+		MULTIPLAYER_ROOM_DATA.MAPS = UNRANKED.MAPLIST;
+	else
+		MULTIPLAYER_ROOM_DATA.MAPS = {};
+
+		for i = 1, UNRANKED.MAPLISTCOUNT do
+			if inArray(MULTIPLAYER_ALLOWED_MAPS, string.lower(UNRANKED.MAPLIST[i].NAME)) then
+				MULTIPLAYER_ROOM_DATA.MAPS = addToArray(MULTIPLAYER_ROOM_DATA.MAPS, UNRANKED.MAPLIST[i]);
+			end;
+		end;
+	end;
 end;
 
 function FROMOW_MULTIROOM_TIMEOUT() -- Called by OW
@@ -622,7 +634,7 @@ function showMultiplayerGame()
   	setText(menu.window_multiplayer_room.panel.playerName, getPlayerName());
 
   	-- set button
-  	if MULTIPLAYER_ROOM_IS_HOST then
+  	if canModifyServerSettings() then
   		setText(menu.window_multiplayer_room.panel.start, loc(804));
   		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'startMultiplayerGame();');
   	else
@@ -631,14 +643,17 @@ function showMultiplayerGame()
   	end;
 
   	-- global multiroom settings
+  	-- delete global settings panel to prevent duplicates
+  	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
+
 	menu.window_multiplayer_room.panel.ready = clCheckbox(
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    1,
 	    0,
 	    'setReadyMultiplayerGame();',
 	    {
-	        checked = MULTIPLAYER_ROOM_IM_READY or MULTIPLAYER_ROOM_IS_HOST,
-	        disabled = MULTIPLAYER_ROOM_IS_HOST
+	        checked = MULTIPLAYER_ROOM_IM_READY or canModifyServerSettings(),
+	        disabled = canModifyServerSettings()
 	    }
 	);
 
@@ -736,7 +751,7 @@ function selectPlayerOnPlayerList(INDEX)
 end;
 
 function kickPlayer()
-	if (not MULTIPLAYER_ROOM_IS_HOST) then
+	if (not canModifyServerSettings()) then
 		return;
 	end;
 
@@ -1003,7 +1018,7 @@ function refreshPlayerView()
 							}
 						);
 
-						if (isMySlot and (not MULTIPLAYER_ROOM_IS_HOST)) then
+						if (isMySlot and (not canModifyServerSettings())) then
 							MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 							set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
 						end;
@@ -1046,7 +1061,7 @@ function refreshPlayerView()
 
 						playerSlots[i] = addToArray(playerSlots[i], slotPlayerName.ID);
 
-						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or (MULTIPLAYER_ROOM_IS_HOST)), playerData.COLOUR, 277, 5);
+						local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5);
 
 						local slotPosition = clComboBox(
 						    slot,
@@ -1243,7 +1258,7 @@ function refreshPlayerView()
 					}
 				);
 
-				if (isMySlot and (not MULTIPLAYER_ROOM_IS_HOST)) then
+				if (isMySlot and (not canModifyServerSettings())) then
 					MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 					set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
 				end;
@@ -1567,8 +1582,8 @@ function setGameTypeList(INDEX, selectedGameType, isHost)
 	local gameTypeList = {};
 	local gameType = nil;
 
-	for i = 1, MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[INDEX].GAMETYPELISTCOUNT do
-		gameType = MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[INDEX].GAMETYPELIST[i];
+	for i = 1, MULTIPLAYER_ROOM_DATA.MAPS[INDEX].GAMETYPELISTCOUNT do
+		gameType = MULTIPLAYER_ROOM_DATA.MAPS[INDEX].GAMETYPELIST[i];
 		gameTypeList = addToArray(gameTypeList, gameType.NAMELOC);
 	end;
 
@@ -1598,8 +1613,8 @@ function selectMap(INDEX)
 
 	MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX = INDEX;
 
-	local mapName = MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[INDEX].NAME;
-	local gameType = MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[INDEX].GAMETYPELIST[1].NAME;
+	local mapName = MULTIPLAYER_ROOM_DATA.MAPS[INDEX].NAME;
+	local gameType = MULTIPLAYER_ROOM_DATA.MAPS[INDEX].GAMETYPELIST[1].NAME;
 
 	OW_MULTIROOM_HOST_SET_MAP(mapName, gameType);
 end;
@@ -1609,8 +1624,8 @@ function selectGameType(INDEX)
 
 	MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = INDEX;
 
-	local mapName = MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME;
-	local gameType = MULTIPLAYER_ROOM_DATA.UNRANKED_MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].GAMETYPELIST[INDEX].NAME;
+	local mapName = MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].NAME;
+	local gameType = MULTIPLAYER_ROOM_DATA.MAPS[MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX].GAMETYPELIST[INDEX].NAME;
 
 	OW_MULTIROOM_HOST_SET_MAP(mapName, gameType);
 end;
@@ -1633,7 +1648,9 @@ function setMapPictureDescription(mapName)
 	setText(menu.window_multiplayer_room.panel.page3.description, description .. '\n\n' .. rules);
 end;
 
-
+function canModifyServerSettings()
+	return MULTIPLAYER_ROOM_IS_HOST or MULTIPLAYER_ROOM_IS_DEDI;
+end;
 
 -- override functions
 -- @TODO

@@ -573,10 +573,18 @@ function clCheckbox(PARENT, X, Y, EVENT, PROPERTIES)
 
     if PROPERTIES.textureChecked == nil then
         PROPERTIES.textureChecked = 'classic/edit/checkbox_on.png';
+
+        if PROPERTIES.disabled then
+            PROPERTIES.textureChecked = 'classic/edit/checkbox_on_inactive.png';
+        end;
     end;
 
     if PROPERTIES.textureUnchecked == nil then
         PROPERTIES.textureUnchecked = 'classic/edit/checkbox_off.png';
+
+        if PROPERTIES.disabled then
+            PROPERTIES.textureUnchecked = 'classic/edit/checkbox_off_inactive.png';
+        end;
     end;
 
     if PROPERTIES.interface then
