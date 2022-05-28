@@ -9,6 +9,7 @@ MULTIPLAYER_ROOM_IS_DEDI = false;
 MULTIPLAYER_ROOM_MY_TEAM = 0;
 MULTIPLAYER_ROOM_MY_PLID = 0;
 MULTIPLAYER_ROOM_IM_READY = false;
+MULTIPLAYER_ROOM_GAME_LOCKED = false;
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -63,7 +64,7 @@ menu.window_multiplayer_room.panel.changeAvatar = clButton(
     150,
     30, 
     loc(TID_Main_Menu_ChangeAvatar),
-    '',
+    'OW_MULTIROOM_HOST_SET_MAPPARAM(2, 2);', -- for test
     {}
 );
 
@@ -621,6 +622,20 @@ function setReadyMultiplayerGame()
 	OW_MULTIROOM_SET_MYREADY(ready);
 end;
 
+function setMultiplayerGameLocked()
+	local value = not MULTIPLAYER_ROOM_GAME_LOCKED;
+	local messageCode = 5041;
+
+	if (value) then
+		messageCode = 5042;
+	end;
+
+	OW_MULTI_SENDALLCHATMSG(loc(messageCode), '#000000');
+
+	OW_MULTIROOM_HOST_SET_SERVERLOCKED(value);
+	changeMultiplayerOption(MULTIPLAYER_OPTION_LOCK_GAME, parseInt(value));
+end;
+
 function showMultiplayerGame()
   	IN_LOBBY = false;	
   	MULTIPLAYER_ROOM_ACTIVE = true;
@@ -642,37 +657,7 @@ function showMultiplayerGame()
   		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
   	end;
 
-  	-- global multiroom settings
-  	-- delete global settings panel to prevent duplicates
-  	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
-
-	menu.window_multiplayer_room.panel.ready = clCheckbox(
-	    menu.window_multiplayer_room.panel.globalSettings,
-	    1,
-	    0,
-	    'setReadyMultiplayerGame();',
-	    {
-	        checked = MULTIPLAYER_ROOM_IM_READY or canModifyServerSettings(),
-	        disabled = canModifyServerSettings()
-	    }
-	);
-
-	menu.window_multiplayer_room.panel.readyLabel = getLabelEX(
-	    menu.window_multiplayer_room.panel.globalSettings,
-	    anchorLT,
-	    XYWH(21, 0, 199, 16),
-	    BankGotic_14, 
-	    loc(818),
-	    {
-	        font_colour = RGB(0, 0, 0),
-	        shadowtext = false,
-	        nomouseevent = true,
-	        text_halign = ALIGN_LEFT,
-	        text_valign = ALIGN_TOP,
-	        wordwrap = false,
-	        scissor = true
-	    }
-	);
+  	initGlobalSettings();
 end;
 
 function hideMultiplayerGame()
@@ -694,6 +679,223 @@ function hideMultiplayerGame()
 
   	deleteSlots();
   	clearAvatarCache();
+end;
+
+function initGlobalSettings()
+	-- global multiroom settings
+  	-- delete global settings panel to prevent duplicates
+  	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
+
+  	if (canModifyServerSettings()) then
+		menu.window_multiplayer_room.panel.gameLock = clCheckbox(
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    1,
+		    0,
+		    'setMultiplayerGameLocked();',
+		    {
+		        checked = MULTIPLAYER_OPTION_LOCK_GAME
+		    }
+		);
+
+		menu.window_multiplayer_room.panel.gameLockLabel = getLabelEX(
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    anchorLT,
+		    XYWH(21, 0, 199, 16),
+		    BankGotic_14, 
+		    loc(817),
+		    {
+		        font_colour = RGB(0, 0, 0),
+		        shadowtext = false,
+		        nomouseevent = true,
+		        text_halign = ALIGN_LEFT,
+		        text_valign = ALIGN_TOP,
+		        wordwrap = false,
+		        scissor = true
+		    }
+		);
+  	else
+		menu.window_multiplayer_room.panel.ready = clCheckbox(
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    1,
+		    0,
+		    'setReadyMultiplayerGame();',
+		    {
+		        checked = MULTIPLAYER_ROOM_IM_READY
+		    }
+		);
+
+		menu.window_multiplayer_room.panel.readyLabel = getLabelEX(
+		    menu.window_multiplayer_room.panel.globalSettings,
+		    anchorLT,
+		    XYWH(21, 0, 199, 16),
+		    BankGotic_14, 
+		    loc(818),
+		    {
+		        font_colour = RGB(0, 0, 0),
+		        shadowtext = false,
+		        nomouseevent = true,
+		        text_halign = ALIGN_LEFT,
+		        text_valign = ALIGN_TOP,
+		        wordwrap = false,
+		        scissor = true
+		    }
+		);
+	end;
+
+	--[[
+		MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
+		MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
+		MULTIPLAYER_OPTION_RANDOM_NATIONS = 60;
+		MULTIPLAYER_OPTION_LOCK_TEAMS = 55;
+		MULTIPLAYER_OPTION_RANDKED = 51;
+		MULTIPLAYER_OPTION_LOCK_GAME = 57;
+		MULTIPLAYER_OPTION_LIMIT_TECH = 56;
+	]]--
+
+	menu.window_multiplayer_room.panel.randomPos = clCheckbox(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    30,
+	    '',
+	    {
+	        checked = false,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(832)
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.randomPosLabel = getLabelEX(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 30, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(831), 1, 21), -- random pos
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.randomCol = clCheckbox(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    48,
+	    '',
+	    {
+	        checked = false,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(836)
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.randomColLabel = getLabelEX(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 48, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(835), 1, 21), -- random colour
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
+	);	
+
+	menu.window_multiplayer_room.panel.randomNat = clCheckbox(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    66,
+	    '',
+	    {
+	        checked = false,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(5040)
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.randomNatLabel = getLabelEX(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 66, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(5039), 1, 21), -- random nation
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.lockTeam = clCheckbox(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    84,
+	    '',
+	    {
+	        checked = false,
+	        disabled = not canModifyServerSettings(),
+	        hint = loc(1231)
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.lockTeam = getLabelEX(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 84, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(1230), 1, 21), -- lock team diplomacy
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
+	);	
+
+	menu.window_multiplayer_room.panel.limitedTech = clCheckbox(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    1,
+	    102,
+	    '',
+	    {
+	        checked = false,
+	        disabled = true,
+	        hint = loc(1217)
+	    }
+	);
+
+	menu.window_multiplayer_room.panel.limitedTech = getLabelEX(
+	    menu.window_multiplayer_room.panel.globalSettings,
+	    anchorLT,
+	    XYWH(21, 102, 199, 16),
+	    BankGotic_14, 
+	    SGUI_widesub(loc(1216), 1, 21), -- limited tech (todo)
+	    {
+	        font_colour = RGB(0, 0, 0),
+	        shadowtext = false,
+	        nomouseevent = true,
+	        text_halign = ALIGN_LEFT,
+	        text_valign = ALIGN_TOP,
+	        wordwrap = false,
+	        scissor = true
+	    }
+	);
 end;
 
 function sendChatMessage(key)
@@ -1383,6 +1585,8 @@ end;
 		4: comboBox
 ]]--
 function generateMapSettings(SETTINGS, IS_HOST)
+	clDebug('test');
+
 	local parent = menu.window_multiplayer_room.panel.page2;
 	local counter = 1;
 
