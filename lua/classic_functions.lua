@@ -846,6 +846,14 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         PROPERTIES.width = 234;
     end;
 
+    if PROPERTIES.trimFrom == nil then
+        PROPERTIES.trimFrom = 0;
+    end;
+
+    if PROPERTIES.trimLength == nil then
+        PROPERTIES.trimLength = strlen(VALUE); 
+    end;
+
     local item = getElementEX(
         PARENT,
         anchorLTRB,
@@ -877,7 +885,7 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
 end;
 
 function clSelectComboBoxItem(ID, PARENTID, BACKGROUNDID, ELEMENTID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, INDEX, VALUE, TRIM_FROM, TRIM)
-    clSetComboBoxValue(COMBOBOXLABELID, VALUE, TRIM_FROM);
+    clSetComboBoxValue(COMBOBOXLABELID, VALUE, TRIM_FROM, TRIM);
     clShowComboBoxList(LISTID, PARENTID, BACKGROUNDID, COMBOBOXBUTTONID, BUTTONTEXTURE, BUTTONCLICKTEXTURE);
     clSetComboBoxSelectedItem(PARENTID, INDEX);
 end;

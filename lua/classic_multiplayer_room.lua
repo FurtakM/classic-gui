@@ -10,6 +10,10 @@ MULTIPLAYER_ROOM_MY_TEAM = 0;
 MULTIPLAYER_ROOM_MY_PLID = 0;
 MULTIPLAYER_ROOM_IM_READY = false;
 MULTIPLAYER_ROOM_GAME_LOCKED = false;
+MULTIPLAYER_ROOM_RANDOM_POSITIONS = false;
+MULTIPLAYER_ROOM_RANDOM_COLOURS = false;
+MULTIPLAYER_ROOM_RANDOM_NATIONS = false;
+MULTIPLAYER_ROOM_LOCK_TEAMS = false;
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -522,14 +526,14 @@ function FROMOW_MULTIROOM_UPDATE_MAP_NAME(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
-	for i = 1, DATA.MAPPARAMCOUNT do
-		if MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i] ~= nil then
-			MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i].VALUE = DATA.MAPPARAMS[i];
-		end;
-	end;
-
 	if MULTIPLAYER_ROOM_DATA.MULTIMAP ~= nil then
-		generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
+		for i = 1, DATA.MAPPARAMCOUNT do
+			if MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i] ~= nil then
+				MULTIPLAYER_ROOM_DATA.MULTIMAP.MAPPARAMS[i].VALUE = DATA.MAPPARAMS[i];
+			end;
+		end;
+
+	generateMapSettings(MULTIPLAYER_ROOM_DATA.MULTIMAP, canModifyServerSettings());
 	end;
 end;
 
@@ -622,20 +626,6 @@ function setReadyMultiplayerGame()
 	OW_MULTIROOM_SET_MYREADY(ready);
 end;
 
-function setMultiplayerGameLocked()
-	local value = not MULTIPLAYER_ROOM_GAME_LOCKED;
-	local messageCode = 5041;
-
-	if (value) then
-		messageCode = 5042;
-	end;
-
-	OW_MULTI_SENDALLCHATMSG(loc(messageCode), '#000000');
-
-	OW_MULTIROOM_HOST_SET_SERVERLOCKED(value);
-	changeMultiplayerOption(MULTIPLAYER_OPTION_LOCK_GAME, parseInt(value));
-end;
-
 function showMultiplayerGame()
   	IN_LOBBY = false;	
   	MULTIPLAYER_ROOM_ACTIVE = true;
@@ -656,8 +646,6 @@ function showMultiplayerGame()
   		setText(menu.window_multiplayer_room.panel.start, loc(818));
   		set_Callback(menu.window_multiplayer_room.panel.start.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
   	end;
-
-  	initGlobalSettings();
 end;
 
 function hideMultiplayerGame()
@@ -681,7 +669,46 @@ function hideMultiplayerGame()
   	clearAvatarCache();
 end;
 
-function initGlobalSettings()
+function setMultiplayerGameLocked()
+	local value = (not MULTIPLAYER_ROOM_GAME_LOCKED);
+	local messageCode = 5042;
+
+	if (value) then
+		messageCode = 5041;
+	end;
+
+	OW_MULTI_SENDALLCHATMSG(loc(messageCode), '#000000');
+
+	OW_MULTIROOM_HOST_SET_SERVERLOCKED(value);
+	OW_MULTIROOM_HOST_SET_MAPPARAM(MULTIPLAYER_OPTION_LOCK_GAME - 2, parseInt(value));
+	MULTIPLAYER_ROOM_GAME_LOCKED = value;
+end;
+
+function setMultiplayerRandomPositions()
+	local value = (not MULTIPLAYER_ROOM_RANDOM_POSITIONS);
+	OW_MULTIROOM_HOST_SET_MAPPARAM(MULTIPLAYER_OPTION_RANDOM_POSITONS - 2, parseInt(value));
+	MULTIPLAYER_ROOM_RANDOM_POSITIONS = value;
+end;
+
+function setMultiplayerRandomColours()
+	local value = (not MULTIPLAYER_ROOM_RANDOM_COLOURS);
+	OW_MULTIROOM_HOST_SET_MAPPARAM(MULTIPLAYER_OPTION_RANDOM_COLOURS - 2, parseInt(value));
+	MULTIPLAYER_ROOM_RANDOM_COLOURS = value;
+end;
+
+function setMultiplayerRandomNations()
+	local value = (not MULTIPLAYER_ROOM_RANDOM_NATIONS);
+	OW_MULTIROOM_HOST_SET_MAPPARAM(MULTIPLAYER_OPTION_RANDOM_NATIONS - 2, parseInt(value));
+	MULTIPLAYER_ROOM_RANDOM_NATIONS = value;
+end;
+
+function setMultiplayerLockTeams()
+	local value = (not MULTIPLAYER_ROOM_LOCK_TEAMS);
+	OW_MULTIROOM_HOST_SET_MAPPARAM(MULTIPLAYER_OPTION_LOCK_TEAMS - 2, parseInt(value));
+	MULTIPLAYER_ROOM_LOCK_TEAMS = value;
+end;
+
+function generateGlobalSettings()
 	-- global multiroom settings
   	-- delete global settings panel to prevent duplicates
   	sgui_deletechildren(menu.window_multiplayer_room.panel.globalSettings.ID);
@@ -693,7 +720,7 @@ function initGlobalSettings()
 		    0,
 		    'setMultiplayerGameLocked();',
 		    {
-		        checked = MULTIPLAYER_OPTION_LOCK_GAME
+		        checked = MULTIPLAYER_ROOM_GAME_LOCKED
 		    }
 		);
 
@@ -756,9 +783,9 @@ function initGlobalSettings()
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    1,
 	    30,
-	    '',
+	    'setMultiplayerRandomPositions();',
 	    {
-	        checked = false,
+	        checked = MULTIPLAYER_ROOM_RANDOM_POSITIONS,
 	        disabled = not canModifyServerSettings(),
 	        hint = loc(832)
 	    }
@@ -785,9 +812,9 @@ function initGlobalSettings()
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    1,
 	    48,
-	    '',
+	    'setMultiplayerRandomColours();',
 	    {
-	        checked = false,
+	        checked = MULTIPLAYER_ROOM_RANDOM_COLOURS,
 	        disabled = not canModifyServerSettings(),
 	        hint = loc(836)
 	    }
@@ -814,9 +841,9 @@ function initGlobalSettings()
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    1,
 	    66,
-	    '',
+	    'setMultiplayerRandomNations();',
 	    {
-	        checked = false,
+	        checked = MULTIPLAYER_ROOM_RANDOM_NATIONS,
 	        disabled = not canModifyServerSettings(),
 	        hint = loc(5040)
 	    }
@@ -843,15 +870,15 @@ function initGlobalSettings()
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    1,
 	    84,
-	    '',
+	    'setMultiplayerLockTeams();',
 	    {
-	        checked = false,
+	        checked = MULTIPLAYER_ROOM_LOCK_TEAMS,
 	        disabled = not canModifyServerSettings(),
 	        hint = loc(1231)
 	    }
 	);
 
-	menu.window_multiplayer_room.panel.lockTeam = getLabelEX(
+	menu.window_multiplayer_room.panel.lockTeamLabel = getLabelEX(
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    anchorLT,
 	    XYWH(21, 84, 199, 16),
@@ -880,7 +907,7 @@ function initGlobalSettings()
 	    }
 	);
 
-	menu.window_multiplayer_room.panel.limitedTech = getLabelEX(
+	menu.window_multiplayer_room.panel.limitedTechLabel = getLabelEX(
 	    menu.window_multiplayer_room.panel.globalSettings,
 	    anchorLT,
 	    XYWH(21, 102, 199, 16),
@@ -967,9 +994,9 @@ function kickPlayer()
 	OW_MULTIROOM_HOST_KICKPLAYER(player);
 end;
 
-function updateHostVisibilitySettings(is_host)
+function updateHostVisibilitySettings(isHost)
 	-- hide/show kick player button if player is host
-	setVisible(menu.window_multiplayer_room.panel.page1.playerListKick, is_host);
+	setVisible(menu.window_multiplayer_room.panel.page1.playerListKick, isHost);
 end;
 
 --[[	 
@@ -1223,6 +1250,7 @@ function refreshPlayerView()
 						if (isMySlot and (not canModifyServerSettings())) then
 							MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 							set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+							setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
 						end;
 
 						local slotPlayerAvatar = getElementEX(
@@ -1463,6 +1491,7 @@ function refreshPlayerView()
 				if (isMySlot and (not canModifyServerSettings())) then
 					MULTIPLAYER_ROOM_IM_READY = playerData.READY;
 					set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+					setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
 				end;
 
 				local slotPlayerAvatar = getElementEX(
@@ -1585,8 +1614,6 @@ end;
 		4: comboBox
 ]]--
 function generateMapSettings(SETTINGS, IS_HOST)
-	clDebug('test');
-
 	local parent = menu.window_multiplayer_room.panel.page2;
 	local counter = 1;
 
@@ -1611,6 +1638,15 @@ function generateMapSettings(SETTINGS, IS_HOST)
 		counter = counter + 1;
 		::continue::
 	end;
+
+
+	MULTIPLAYER_ROOM_GAME_LOCKED = (SETTINGS.MAPPARAMS[MULTIPLAYER_OPTION_LOCK_GAME - 1].VALUE) > 0;
+	MULTIPLAYER_ROOM_RANDOM_POSITIONS = (SETTINGS.MAPPARAMS[MULTIPLAYER_OPTION_RANDOM_POSITONS - 1].VALUE) > 0;
+	MULTIPLAYER_ROOM_RANDOM_COLOURS = (SETTINGS.MAPPARAMS[MULTIPLAYER_OPTION_RANDOM_COLOURS - 1].VALUE) > 0;
+	MULTIPLAYER_ROOM_RANDOM_NATIONS = (SETTINGS.MAPPARAMS[MULTIPLAYER_OPTION_RANDOM_NATIONS - 1].VALUE) > 0;
+	MULTIPLAYER_ROOM_LOCK_TEAMS = (SETTINGS.MAPPARAMS[MULTIPLAYER_OPTION_LOCK_TEAMS - 1].VALUE) > 0;
+
+	generateGlobalSettings();
 end;
 
 function setMultiplayerOption(PARENT, OPTION, INDEX, MODIFIABLE)
