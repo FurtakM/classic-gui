@@ -256,8 +256,9 @@ menu.window_multiplayer_room.panel.page4Button = getElementEX(
 	),
 	true,
 	{
-		texture = 'classic/edit/multiroom/zalozka-servers-off.png',
-		callback_mousedown = 'multiRoomChangePage(4);'
+		texture = 'classic/edit/multiroom/zalozka-tech-off.png',
+		callback_mousedown = 'multiRoomChangePage(4);',
+		disabled = MULTIPLAYER_OPTION_LIMIT_TECH
 	}
 );
 
@@ -943,7 +944,7 @@ function multiRoomChangePage(page)
 		'zalozka-players-',
 		'zalozka-options-',
 		'zalozka-map-',
-		'zalozka-servers-'
+		'zalozka-tech-'
 	};
 
 	local pages = {
