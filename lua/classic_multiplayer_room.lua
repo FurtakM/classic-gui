@@ -68,8 +68,10 @@ menu.window_multiplayer_room.panel.changeAvatar = clButton(
     150,
     30, 
     loc(TID_Main_Menu_ChangeAvatar),
-    'OW_MULTIROOM_HOST_SET_MAPPARAM(2, 2);', -- for test
-    {}
+    'showMultiplayerAvatarGenerator();', -- for test
+    {
+    	disabled = MULTIPLAYER_ROOM_IM_READY
+    }
 );
 
 
@@ -428,6 +430,73 @@ menu.window_multiplayer_room.panel.page4 = getElementEX(
 	}
 );
 
+-- xichted avatar generator
+menu.window_multiplayer_room.avatarPanel = getElementEX(
+    menu.window_multiplayer_room,
+    anchorLTRB,
+    XYWH(0, 0, LayoutWidth, LayoutHeight),
+    true,
+    {
+        colour1 = BLACKA(50)
+    }
+);
+
+menu.window_multiplayer_room.avatarPanel.popup = getElementEX(
+	menu.window_multiplayer_room.avatarPanel,
+    anchorNone,
+    XYWH(menu.window_multiplayer_room.avatarPanel.width / 2 - 310, menu.window_multiplayer_room.avatarPanel.height / 2 - 123, 621, 246),
+    true,
+    {
+        texture = 'classic/edit/avw_1.png'
+    }
+);
+
+menu.window_multiplayer_room.avatarPanel.popup.preview = getElementEX(
+	menu.window_multiplayer_room.avatarPanel.popup, 
+	anchorLTRB,
+	XYWH(
+		16,
+		17, 
+		80,
+		100
+	),
+	true,
+	{
+		texture = 'Avatars/unknow.png'
+	}
+);
+
+--if (playerData.AVATAR_COMPONENT) then
+--	SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_COMPONENT, 80, 100, 80, 100);
+--end;
+
+menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
+    menu.window_multiplayer_room.avatarPanel.popup, 
+    235, 
+    210, 
+    150,
+    18, 
+    loc(828), -- close
+    'hideMultiplayerAvatarGenerator();',
+    {
+    	texture = 'classic/edit/menu_button_small_l.png',
+    	texture2 = 'classic/edit/menu_button_small_c.png',
+    	texture3 = 'classic/edit/menu_button_small_r.png'
+    }
+);
+
+function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
+	clDebug(DATA);
+end;
+
+function showMultiplayerAvatarGenerator()
+	setVisible(menu.window_multiplayer_room.avatarPanel, true);
+end;
+
+function hideMultiplayerAvatarGenerator()
+	setVisible(menu.window_multiplayer_room.avatarPanel, false);
+end;
+
 -- events
 OW_ROOM_SETUP(menu.window_multiplayer_room.panel.chat.TEXTBOX.ID, textBoxTest.ID, menu.window_multiplayer_room.panel.status.ID);
 
@@ -596,10 +665,6 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
 
   	deleteSlots();
   	clearAvatarCache();
-end;
-
-function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
-
 end;
 
 -- main functions
