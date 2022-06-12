@@ -14,6 +14,9 @@ MULTIPLAYER_ROOM_RANDOM_POSITIONS = false;
 MULTIPLAYER_ROOM_RANDOM_COLOURS = false;
 MULTIPLAYER_ROOM_RANDOM_NATIONS = false;
 MULTIPLAYER_ROOM_LOCK_TEAMS = false;
+MULTIPLAYER_ROOM_MY_AVATAR_ID = 0;
+MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = nil;
+MULTIPLAYER_ROOM_MY_AVATAR_SEX = 0;
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
 MULTIPLAYER_OPTION_RANDOM_COLOURS = 59;
@@ -435,7 +438,7 @@ menu.window_multiplayer_room.avatarPanel = getElementEX(
     menu.window_multiplayer_room,
     anchorLTRB,
     XYWH(0, 0, LayoutWidth, LayoutHeight),
-    true,
+    false,
     {
         colour1 = BLACKA(50)
     }
@@ -444,7 +447,7 @@ menu.window_multiplayer_room.avatarPanel = getElementEX(
 menu.window_multiplayer_room.avatarPanel.popup = getElementEX(
 	menu.window_multiplayer_room.avatarPanel,
     anchorNone,
-    XYWH(menu.window_multiplayer_room.avatarPanel.width / 2 - 310, menu.window_multiplayer_room.avatarPanel.height / 2 - 123, 621, 246),
+    XYWH(menu.window_multiplayer_room.avatarPanel.width / 2 - 310, menu.window_multiplayer_room.avatarPanel.height / 2 - 123, 621, 400),
     true,
     {
         texture = 'classic/edit/avw_1.png'
@@ -466,14 +469,38 @@ menu.window_multiplayer_room.avatarPanel.popup.preview = getElementEX(
 	}
 );
 
---if (playerData.AVATAR_COMPONENT) then
---	SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_COMPONENT, 80, 100, 80, 100);
---end;
+menu.window_multiplayer_room.avatarPanel.popup.settings = getElementEX(
+	menu.window_multiplayer_room.avatarPanel.popup, 
+	anchorLTRB,
+	XYWH(
+		110,
+		10, 
+		500,
+		340
+	),
+	true,
+	{}
+);
+
+menu.window_multiplayer_room.avatarPanel.popup.randomBtn = clButton(
+    menu.window_multiplayer_room.avatarPanel.popup, 
+    235, 
+    352, 
+    150,
+    18, 
+    loc(1100), -- random face
+    '',
+    {
+    	texture = 'classic/edit/menu_button_small_l.png',
+    	texture2 = 'classic/edit/menu_button_small_c.png',
+    	texture3 = 'classic/edit/menu_button_small_r.png'
+    }
+);
 
 menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
     menu.window_multiplayer_room.avatarPanel.popup, 
     235, 
-    210, 
+    376, 
     150,
     18, 
     loc(828), -- close
@@ -485,16 +512,68 @@ menu.window_multiplayer_room.avatarPanel.popup.closeBtn = clButton(
     }
 );
 
-function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
-	clDebug(DATA);
-end;
-
 function showMultiplayerAvatarGenerator()
 	setVisible(menu.window_multiplayer_room.avatarPanel, true);
+
+	if (MULTIPLAYER_ROOM_MY_AVATAR_ID) then
+		sgui_deletechildren(menu.window_multiplayer_room.avatarPanel.popup.settings.ID);
+		SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, MULTIPLAYER_ROOM_MY_AVATAR_ID, 80, 100, 80, 100);
+		refreshPlayerAvatarSettings();
+	end;
 end;
 
 function hideMultiplayerAvatarGenerator()
 	setVisible(menu.window_multiplayer_room.avatarPanel, false);
+end;
+
+function refreshPlayerAvatarSettings()
+	local components = {
+		'CHEEK',
+		'NECK',
+		'FACE',
+		'BEARD',
+		'NOSE',
+		'EAR',
+		'EYE',
+		'GLASSES',
+		'HAIR',
+		'MOUTH'
+	};
+	local parts = AVATARS_COMPONENTS.MALE;
+
+	if MULTIPLAYER_ROOM_MY_AVATAR_SEX > 0 then
+		parts = AVATARS_COMPONENTS.FEMALE;
+	end;
+
+	for i = 1, #components do
+		getLabelEX(
+		    menu.window_multiplayer_room.avatarPanel.popup.settings,
+		    anchorT, 
+		    XYWH(
+		    	10 + (((i - 1) % 2) * 240),
+		    	6 + (math.floor((i - 1) / 2) * 40),
+		    	240,
+		    	14
+		    ), 
+		    nil,
+		    SGUI_widesub('test', 1, 27),
+		    {
+		        font_colour = WHITE(),
+	            nomouseevent = true,
+	            font_name = BankGotic_14
+		    }
+		);
+		
+		clComboBox(
+		    menu.window_multiplayer_room.avatarPanel.popup.settings,
+		    10 + (((i - 1) % 2) * 240),
+		    24 + (math.floor((i - 1) / 2) * 40),
+		    parts[components[i]].PARTS,
+		    1, -- components[i].SELECTED,
+		    '',--'changeAvatarComponent(' .. components[i].ID .. ', "INDEX")',
+		    {}
+		);
+	end;
 end;
 
 -- events
@@ -1171,6 +1250,10 @@ function refreshPlayerView()
 				playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
 			end;
 		end;
+
+		MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1);
+		MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR_COMPONENT;
+		MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
 	end;
 
 	if (MULTIPLAYER_ROOM_DATA.TEAMDEF == nil) then

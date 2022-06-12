@@ -1,4 +1,15 @@
 AVATARS_DATA = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; -- global array which contains OpenGL id's of AVATARS
+AVATARS_COMPONENTS = { };
+AVATAR_PARTS = {};
+
+function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
+	AVATAR_PARTS = DATA;
+end;
+
+OW_XICHT_PORTRAIT_GETPARTS(0);
+AVATARS_COMPONENTS.MALE = AVATAR_PARTS;
+OW_XICHT_PORTRAIT_GETPARTS(1);
+AVATARS_COMPONENTS.FEMALE = AVATAR_PARTS;
 
 function generateAvatar(INDEX, AVATAR, SEX, NATION)
 	if NATION < 0 then
@@ -37,6 +48,14 @@ function generateAvatar(INDEX, AVATAR, SEX, NATION)
 	return id;
 end;
 
+function getAvatarID(INDEX)
+	return AVATARS_DATA[INDEX];
+end;
+
+function setAvatar(SEX, NECK, FACE, CHEEK, EYE, NOSE, MOUTH, EAR, EYEBROW, HAIR, BEARD, GLASSES)
+	OW_MULTIROOM_SET_MYAVATAR(SEX,'0;'..NECK..';'..FACE..';'..CHEEK..';'..EYE..';'..NOSE..';'..MOUTH..';'..EAR..';'..EYEBROW..';'..HAIR..';'..BEARD..';0;'..GLASSES..';0;');
+end;
+
 function clearAvatarCache()
 	if AVATARS_DATA ~= nil then
 		for i = 1, #AVATARS_DATA do
@@ -45,4 +64,8 @@ function clearAvatarCache()
 
 		AVATARS_DATA = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	end;
+end;
+
+function changeAvatarComponent(ID, INDEX)
+
 end;
