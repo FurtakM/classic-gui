@@ -479,7 +479,24 @@ menu.window_multiplayer_room.avatarPanel.popup.settings = getElementEX(
 		340
 	),
 	true,
-	{}
+	{
+		colour1 = WHITEA()
+	}
+);
+
+menu.window_multiplayer_room.avatarPanel.popup.saveBtn = clButton(
+    menu.window_multiplayer_room.avatarPanel.popup, 
+    235,
+    328,
+    150,
+    18, 
+    loc(1173), -- ok
+    '',
+    {
+    	texture = 'classic/edit/menu_button_small_l.png',
+    	texture2 = 'classic/edit/menu_button_small_c.png',
+    	texture3 = 'classic/edit/menu_button_small_r.png'
+    }
 );
 
 menu.window_multiplayer_room.avatarPanel.popup.randomBtn = clButton(
@@ -528,6 +545,7 @@ end;
 
 function refreshPlayerAvatarSettings()
 	local components = {
+		'SEX',
 		'CHEEK',
 		'NECK',
 		'FACE',
@@ -535,17 +553,80 @@ function refreshPlayerAvatarSettings()
 		'NOSE',
 		'EAR',
 		'EYE',
+		'EYEBROW',
 		'GLASSES',
 		'HAIR',
 		'MOUTH'
 	};
+
+	local componentsID = {
+		1,
+		4,
+		2,
+		3,
+		11,
+		6,
+		8,
+		5,
+		9,
+		13,
+		10,
+		7
+	};
+	
+	local componentsNames = {
+		loc(1101), -- SEX
+		loc(1104), -- CHEEK
+		loc(1102), -- NECK
+		loc(1112), -- FACE
+		loc(1110), -- BREAD
+		loc(1105), -- NOSE
+		loc(1107), -- EAR
+		loc(1103), -- EYES
+		loc(1108), -- EYEBROW
+		loc(1111), -- GlASSES
+		loc(1109), -- HAIR
+		loc(1106), -- MOUTH
+	};
+
 	local parts = AVATARS_COMPONENTS.MALE;
 
 	if MULTIPLAYER_ROOM_MY_AVATAR_SEX > 0 then
 		parts = AVATARS_COMPONENTS.FEMALE;
 	end;
 
-	for i = 1, #components do
+	getLabelEX(
+	    menu.window_multiplayer_room.avatarPanel.popup.settings,
+	    anchorT, 
+	    XYWH(
+	    	10,
+	    	6,
+	    	240,
+	    	14
+	    ), 
+	    nil,
+	    SGUI_widesub(componentsNames[1], 1, 27),
+	    {
+	        font_colour = BLACK(),
+	        nomouseevent = true,
+	        font_name = BankGotic_14
+	    }
+	);
+
+	clComboBox(
+	    menu.window_multiplayer_room.avatarPanel.popup.settings,
+	    10,
+	    24,
+	    {
+			loc(1168), -- Male
+			loc(1169)  -- Female 
+		},
+	    MULTIPLAYER_ROOM_MY_AVATAR_SEX + 1,
+	    '',--'changeAvatarComponent(' .. components[i].ID .. ', "INDEX")',
+	    {}
+	);
+
+	for i = 2, #components do
 		getLabelEX(
 		    menu.window_multiplayer_room.avatarPanel.popup.settings,
 		    anchorT, 
@@ -556,20 +637,20 @@ function refreshPlayerAvatarSettings()
 		    	14
 		    ), 
 		    nil,
-		    SGUI_widesub('test', 1, 27),
+		    SGUI_widesub(componentsNames[i], 1, 27),
 		    {
-		        font_colour = WHITE(),
+		        font_colour = BLACK(),
 	            nomouseevent = true,
 	            font_name = BankGotic_14
 		    }
 		);
-		
+
 		clComboBox(
 		    menu.window_multiplayer_room.avatarPanel.popup.settings,
 		    10 + (((i - 1) % 2) * 240),
 		    24 + (math.floor((i - 1) / 2) * 40),
 		    parts[components[i]].PARTS,
-		    1, -- components[i].SELECTED,
+		    MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS[componentsID[i]],
 		    '',--'changeAvatarComponent(' .. components[i].ID .. ', "INDEX")',
 		    {}
 		);
@@ -1243,7 +1324,7 @@ function refreshPlayerView()
 		MULTIPLAYER_ROOM_MY_PLID = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].PLID;
 
 		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
-			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_COMPONENT = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
+			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_ID = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
 
 			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
 				teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
@@ -1252,7 +1333,7 @@ function refreshPlayerView()
 		end;
 
 		MULTIPLAYER_ROOM_MY_AVATAR_ID = getAvatarID(MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1);
-		MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR_COMPONENT;
+		MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATAR;
 		MULTIPLAYER_ROOM_MY_AVATAR_SEX = MULTIPLAYER_ROOM_DATA.Players[MULTIPLAYER_ROOM_DATA.PlayerMyPos + 1].AVATARSEX;
 	end;
 
@@ -1417,8 +1498,8 @@ function refreshPlayerView()
 							}
 						);
 
-						if (playerData.AVATAR_COMPONENT) then
-							SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_COMPONENT, 80, 100, 80, 100);
+						if (playerData.AVATAR_ID) then
+							SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_ID, 80, 100, 80, 100);
 						end;
 
 						local slotPlayerName = getLabelEX(
@@ -1658,8 +1739,8 @@ function refreshPlayerView()
 					}
 				);
 
-				if (playerData.AVATAR_COMPONENT) then
-					SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_COMPONENT, 80, 100, 80, 100);
+				if (playerData.AVATAR_ID) then
+					SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_ID, 80, 100, 80, 100);
 				end;
 
 				local slotPlayerName = getLabelEX(

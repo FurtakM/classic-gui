@@ -1,5 +1,6 @@
 AVATARS_DATA = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; -- global array which contains OpenGL id's of AVATARS
-AVATARS_COMPONENTS = { };
+AVATAR_PREVIEW_ID = nil;
+AVATARS_COMPONENTS = {};
 AVATAR_PARTS = {};
 
 function FROMOW_XICHT_PORTRAIT_PARTS(DATA)
@@ -53,6 +54,10 @@ function getAvatarID(INDEX)
 end;
 
 function setAvatar(SEX, NECK, FACE, CHEEK, EYE, NOSE, MOUTH, EAR, EYEBROW, HAIR, BEARD, GLASSES)
+	if (AVATAR_PREVIEW_ID ~= nil) then
+		OW_XICHT_PORTRAIT_FREETEXTURE(AVATAR_PREVIEW_ID);
+	end;
+
 	OW_MULTIROOM_SET_MYAVATAR(SEX,'0;'..NECK..';'..FACE..';'..CHEEK..';'..EYE..';'..NOSE..';'..MOUTH..';'..EAR..';'..EYEBROW..';'..HAIR..';'..BEARD..';0;'..GLASSES..';0;');
 end;
 
@@ -66,6 +71,39 @@ function clearAvatarCache()
 	end;
 end;
 
-function changeAvatarComponent(ID, INDEX)
+function clearPreviewAvatarCache()
+	if (AVATAR_PREVIEW_ID ~= nil) then
+		OW_XICHT_PORTRAIT_FREETEXTURE(AVATAR_PREVIEW_ID);
+	end;
 
+	AVATAR_PREVIEW_ID = nil;
+end;
+
+function previewAvatar(SEX, NECK, FACE, CHEEK, EYE, NOSE, MOUTH, EAR, EYEBROW, HAIR, BEARD, GLASSES)
+	if (AVATAR_PREVIEW_ID ~= nil) then
+		OW_XICHT_PORTRAIT_FREETEXTURE(AVATAR_PREVIEW_ID);
+	end;
+
+	AVATAR_PREVIEW_ID = OW_XICHT_PORTRAIT(
+		0, 
+		SEX,
+		1,
+		true,
+		0,
+		NECK,
+		FACE,
+		CHEEK,
+		EYES,
+		NOSE,
+		MOUTH,
+		EAR,
+		EYEBROW,
+		HAIR,
+		BEARD,
+		0,
+		GLASSES,
+		0
+	);
+
+	return AVATAR_PREVIEW_ID;
 end;
