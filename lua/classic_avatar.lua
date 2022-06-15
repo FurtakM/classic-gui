@@ -79,29 +79,29 @@ function clearPreviewAvatarCache()
 	AVATAR_PREVIEW_ID = nil;
 end;
 
-function previewAvatar(SEX, NECK, FACE, CHEEK, EYE, NOSE, MOUTH, EAR, EYEBROW, HAIR, BEARD, GLASSES)
+function previewAvatar(AVATAR)
 	if (AVATAR_PREVIEW_ID ~= nil) then
 		OW_XICHT_PORTRAIT_FREETEXTURE(AVATAR_PREVIEW_ID);
 	end;
 
 	AVATAR_PREVIEW_ID = OW_XICHT_PORTRAIT(
 		0, 
-		SEX,
+		AVATAR[1],
 		1,
 		true,
 		0,
-		NECK,
-		FACE,
-		CHEEK,
-		EYES,
-		NOSE,
-		MOUTH,
-		EAR,
-		EYEBROW,
-		HAIR,
-		BEARD,
+		AVATAR[2],
+		AVATAR[3],
+		AVATAR[4],
+		AVATAR[5],
+		AVATAR[6],
+		AVATAR[7],
+		AVATAR[8],
+		AVATAR[9],
+		AVATAR[10],
+		AVATAR[11],
 		0,
-		GLASSES,
+		AVATAR[13],
 		0
 	);
 

@@ -16,6 +16,7 @@ MULTIPLAYER_ROOM_RANDOM_NATIONS = false;
 MULTIPLAYER_ROOM_LOCK_TEAMS = false;
 MULTIPLAYER_ROOM_MY_AVATAR_ID = 0;
 MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS = nil;
+MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS = nil;
 MULTIPLAYER_ROOM_MY_AVATAR_SEX = 0;
 
 MULTIPLAYER_OPTION_RANDOM_POSITONS = 58;
@@ -506,7 +507,7 @@ menu.window_multiplayer_room.avatarPanel.popup.randomBtn = clButton(
     150,
     18, 
     loc(1100), -- random face
-    '',
+    'randomPreviewAvatar();',
     {
     	texture = 'classic/edit/menu_button_small_l.png',
     	texture2 = 'classic/edit/menu_button_small_c.png',
@@ -533,8 +534,8 @@ function showMultiplayerAvatarGenerator()
 	setVisible(menu.window_multiplayer_room.avatarPanel, true);
 
 	if (MULTIPLAYER_ROOM_MY_AVATAR_ID) then
-		sgui_deletechildren(menu.window_multiplayer_room.avatarPanel.popup.settings.ID);
 		SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, MULTIPLAYER_ROOM_MY_AVATAR_ID, 80, 100, 80, 100);
+		MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS = copytable(MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS);
 		refreshPlayerAvatarSettings();
 	end;
 end;
@@ -544,6 +545,8 @@ function hideMultiplayerAvatarGenerator()
 end;
 
 function refreshPlayerAvatarSettings()
+	sgui_deletechildren(menu.window_multiplayer_room.avatarPanel.popup.settings.ID);
+
 	local components = {
 		'SEX',
 		'CHEEK',
@@ -622,7 +625,7 @@ function refreshPlayerAvatarSettings()
 			loc(1169)  -- Female 
 		},
 	    MULTIPLAYER_ROOM_MY_AVATAR_SEX + 1,
-	    '',--'changeAvatarComponent(' .. components[i].ID .. ', "INDEX")',
+	    'updatePreviewAvatarSex("INDEX")',
 	    {}
 	);
 
@@ -650,11 +653,84 @@ function refreshPlayerAvatarSettings()
 		    10 + (((i - 1) % 2) * 240),
 		    24 + (math.floor((i - 1) / 2) * 40),
 		    parts[components[i]].PARTS,
-		    MULTIPLAYER_ROOM_MY_AVATAR_COMPONENTS[componentsID[i]],
-		    '',--'changeAvatarComponent(' .. components[i].ID .. ', "INDEX")',
+		    MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[componentsID[i]],
+		    'updatePreviewAvatar(' .. componentsID[i] .. ', "INDEX")',
 		    {}
 		);
 	end;
+end;
+
+function updatePreviewAvatar(ID, INDEX)
+	MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[ID] = INDEX;
+	SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, previewAvatar(MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS), 80, 100, 80, 100);
+end;
+
+function updatePreviewAvatarSex(INDEX)
+	MULTIPLAYER_ROOM_MY_AVATAR_SEX = INDEX - 1;
+
+	local parts = AVATARS_COMPONENTS.MALE;
+
+	if MULTIPLAYER_ROOM_MY_AVATAR_SEX > 0 then
+		parts = AVATARS_COMPONENTS.FEMALE;
+	end;
+
+	MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[1] = MULTIPLAYER_ROOM_MY_AVATAR_SEX;
+
+	for i = 2, #MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS do
+		MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[i] = 1;
+	end;
+
+	SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, previewAvatar(MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS), 80, 100, 80, 100);
+	refreshPlayerAvatarSettings();
+end;
+
+function randomPreviewAvatar()
+	local sex = math.random(0, 1);
+	local parts = AVATARS_COMPONENTS.MALE;
+
+	if sex > 0 then
+		parts = AVATARS_COMPONENTS.FEMALE;
+	end;
+
+	local components = {
+		'SEX',
+		'CHEEK',
+		'NECK',
+		'FACE',
+		'BEARD',
+		'NOSE',
+		'EAR',
+		'EYE',
+		'EYEBROW',
+		'GLASSES',
+		'HAIR',
+		'MOUTH'
+	};
+
+	local componentsID = {
+		1,
+		4,
+		2,
+		3,
+		11,
+		6,
+		8,
+		5,
+		9,
+		13,
+		10,
+		7
+	};
+
+	MULTIPLAYER_ROOM_MY_AVATAR_SEX = sex;
+	MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[1] = sex;
+
+	for i = 2, #componentsID do
+		MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS[componentsID[i]] = math.random(1, #parts[components[i]].PARTS);
+	end;
+
+	SGUI_settextureid(menu.window_multiplayer_room.avatarPanel.popup.preview.ID, previewAvatar(MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS), 80, 100, 80, 100);
+    refreshPlayerAvatarSettings();
 end;
 
 -- events
