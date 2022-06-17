@@ -1431,14 +1431,24 @@ function refreshPlayerView()
 		return;
 	end;
 
+
+	for i = 2, 9 do
+		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
+			teamCounter = teamCounter + 1;
+		end;
+	end;
+
+	if (teamCounter < 5) then
+		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
+	else
+		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
+	end;
+
 	local posY = 0; -- start Y pos for elements
-	consoleLog('Start: ' .. posY);
 
 	-- generate team names
 	for i = 2, 9 do
 		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
-			teamCounter = teamCounter + 1;
-
 			-- get team allowed positions
 			local allowedPositions = {};
 
@@ -1464,7 +1474,6 @@ function refreshPlayerView()
 			);
 
 			posY = posY + 26;
-			consoleLog('Team Slot [' .. i ..']: ' .. posY);
 
 			local teamBtn = clButton(
 			    menu.window_multiplayer_room.panel.page1.playerSlots, 
@@ -1518,7 +1527,6 @@ function refreshPlayerView()
 						end;
 					else
 						posY = posY + 32;
-						consoleLog('PlayerSlot [' .. i ..', '.. p .. ']: ' .. posY);
 
 						local slot = getElementEX(
 							menu.window_multiplayer_room.panel.page1.playerSlots, 
@@ -1832,12 +1840,6 @@ function refreshPlayerView()
 				posY = posY + 32;
 			end;
 		end;
-	end;
-
-	if (teamCounter < 5) then
-		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
-	else
-		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
 	end;
 end;
 
