@@ -6,7 +6,6 @@ MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = 1;
 MULTIPLAYER_ROOM_ACTIVE_PAGE = 1;
 MULTIPLAYER_ROOM_IS_HOST = false;
 MULTIPLAYER_ROOM_IS_DEDI = false;
-MULTIPLAYER_ROOM_MY_TEAM = 0;
 MULTIPLAYER_ROOM_MY_PLID = 0;
 MULTIPLAYER_ROOM_IM_READY = false;
 MULTIPLAYER_ROOM_GAME_LOCKED = false;
@@ -73,9 +72,7 @@ menu.window_multiplayer_room.panel.changeAvatar = clButton(
     30, 
     loc(TID_Main_Menu_ChangeAvatar),
     'showMultiplayerAvatarGenerator();', -- for test
-    {
-    	disabled = MULTIPLAYER_ROOM_IM_READY
-    }
+    {}
 );
 
 
@@ -492,7 +489,7 @@ menu.window_multiplayer_room.avatarPanel.popup.saveBtn = clButton(
     150,
     18, 
     loc(1173), -- ok
-    '',
+    'savePreviewAvatar();',
     {
     	texture = 'classic/edit/menu_button_small_l.png',
     	texture2 = 'classic/edit/menu_button_small_c.png',
@@ -733,6 +730,11 @@ function randomPreviewAvatar()
     refreshPlayerAvatarSettings();
 end;
 
+function savePreviewAvatar()
+	setAvatar(MULTIPLAYER_ROOM_MY_AVATAR_SEX, MULTIPLAYER_ROOM_PREVIEV_AVATAR_COMPONENTS);
+	setVisible(menu.window_multiplayer_room.avatarPanel, false);
+end;
+
 -- events
 OW_ROOM_SETUP(menu.window_multiplayer_room.panel.chat.TEXTBOX.ID, textBoxTest.ID, menu.window_multiplayer_room.panel.status.ID);
 
@@ -817,8 +819,9 @@ function FROMOW_MULTIROOM_TEAMLIST(DATA)
 	updatePlayersCount(MULTIPLAYER_ROOM_DATA.PlayerCount, MULTIPLAYER_ROOM_DATA.MaxPlayers);
 	updatePlayersOnServer(MULTIPLAYER_ROOM_DATA.Players);
 
-	refreshPlayerView();
 	setMapList(MULTIPLAYER_ROOM_DATA.MAPS, MULTIPLAYER_ROOM_ACTIVE_MAP_INDEX, canModifyServerSettings());
+
+	updateMultiplayerView();
 end;
 
 -- trigger each when map is changed
@@ -844,7 +847,7 @@ function FROMOW_MULTIROOM_UPDATE_MAP_SETTINGS(DATA)
 end;
 
 function FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST(DATA)
-	-- clDebug('FROMOW_MULTIROOM_UPDATE_MAP_GAMETYPE_LIST');
+	MULTIPLAYER_ROOM_ACTIVE_GAMETYPE_INDEX = 1;
 end;
 
 function FROMOW_MULTIROOM_GET_MAP_GAMETYPES_CALLBACK(DATA)
@@ -891,7 +894,6 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
 	OW_IRC_DESTROY();
 	  	
 	MULTIPLAYER_ROOM_ACTIVE = false;
-	MULTIPLAYER_ROOM_MY_TEAM = 0;
   	MULTIPLAYER_ROOM_IS_HOST = false;
   	MULTIPLAYER_ROOM_IS_DEDI = false;
   	MULTIPLAYER_ROOM_DATA = {};
@@ -903,6 +905,18 @@ function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
   	clearAvatarCache();
 end;
 
+MULTIPLAYER_ROOM_TIMER_ID = timer:repeatable(0.1, 'refreshPlayerView();', -1);
+timer:stop(MULTIPLAYER_ROOM_TIMER_ID);
+
+function updateMultiplayerView()
+	local _t = timer:get(MULTIPLAYER_ROOM_TIMER_ID);
+
+    if (_t.delay == 0) then
+        _t.delay = 0.1;
+        _t.time  = 0;
+    end;
+end;
+
 -- main functions
 function startMultiplayerGame()
     if OW_ROOM_LAUNCH_GAME() then
@@ -910,7 +924,6 @@ function startMultiplayerGame()
 		OW_IRC_DESTROY();
   	  	
 		MULTIPLAYER_ROOM_ACTIVE = false;
-  	  	MULTIPLAYER_ROOM_MY_TEAM = 0;
 	  	MULTIPLAYER_ROOM_IS_HOST = false;
 	  	MULTIPLAYER_ROOM_IS_DEDI = false;
 	  	MULTIPLAYER_ROOM_DATA = {};
@@ -924,7 +937,9 @@ function startMultiplayerGame()
 end;
 
 function setReadyMultiplayerGame()
-	local ready = (not MULTIPLAYER_ROOM_IM_READY);
+	setEnabled(menu.window_multiplayer_room.panel.changeAvatar, MULTIPLAYER_ROOM_IM_READY);
+
+	local ready = (not MULTIPLAYER_ROOM_IM_READY);	
 	OW_MULTIROOM_SET_MYREADY(ready);
 end;
 
@@ -961,7 +976,6 @@ function hideMultiplayerGame()
   	setVisible(menu.window_multiplayer_room, false);
   	setVisible(menu.window_multiplayer, true);
 
-  	MULTIPLAYER_ROOM_MY_TEAM = 0;
   	MULTIPLAYER_ROOM_IS_HOST = false;
   	MULTIPLAYER_ROOM_IS_DEDI = false;
   	MULTIPLAYER_ROOM_DATA = {};
@@ -1418,6 +1432,7 @@ function refreshPlayerView()
 	end;
 
 	local posY = 0; -- start Y pos for elements
+	consoleLog('Start: ' .. posY);
 
 	-- generate team names
 	for i = 2, 9 do
@@ -1449,38 +1464,22 @@ function refreshPlayerView()
 			);
 
 			posY = posY + 26;
+			consoleLog('Team Slot [' .. i ..']: ' .. posY);
 
-			if (i == MULTIPLAYER_ROOM_MY_TEAM) then
-				local teamBtn = clButton(
-				    menu.window_multiplayer_room.panel.page1.playerSlots, 
-				    304, 
-				    posY, 
-				    150,
-				    18, 
-				    loc(825), -- leave
-				    'leaveTeam();',
-				    {
-				    	texture = 'classic/edit/menu_button_small_l.png',
-				    	texture2 = 'classic/edit/menu_button_small_c.png',
-				    	texture3 = 'classic/edit/menu_button_small_r.png'
-				    }
-				);
-			else
-				local teamBtn = clButton(
-				    menu.window_multiplayer_room.panel.page1.playerSlots, 
-				    304, 
-				    posY, 
-				    150,
-				    18, 
-				    loc(839), -- join
-				    'joinToTeam(' .. i .. ', -1);',
-				    {
-				    	texture = 'classic/edit/menu_button_small_l.png',
-				    	texture2 = 'classic/edit/menu_button_small_c.png',
-				    	texture3 = 'classic/edit/menu_button_small_r.png'
-				    }
-				);
-			end;
+			local teamBtn = clButton(
+			    menu.window_multiplayer_room.panel.page1.playerSlots, 
+			    304, 
+			    posY, 
+			    150,
+			    18, 
+			    loc(839), -- join
+			    'joinToTeam(' .. i .. ', -1);',
+			    {
+			    	texture = 'classic/edit/menu_button_small_l.png',
+			    	texture2 = 'classic/edit/menu_button_small_c.png',
+			    	texture3 = 'classic/edit/menu_button_small_r.png'
+			    }
+			);
 
 			if (#teamPlayers[i] > 0) then
 				for p = 1, #teamPlayers[i] do				
@@ -1489,6 +1488,11 @@ function refreshPlayerView()
 					local isMerged = isMerged(playerData.PLID, playerData.TEAM, playerData.TEAMPOS, playerMerged[playerData.TEAMPOS + 1]);
 					local slotExists = #playerSlots[i] >= playerData.TEAMPOS + 1;
 					local allowedNations = {};
+
+					if (isMySlot) then
+						setText(teamBtn, loc(825));
+						set_Callback(teamBtn.ID, CALLBACK_MOUSECLICK, 'leaveTeam();');
+					end;
 
 					if (#allowedPositions > 0 and playerData.SIDE > 0) then
 						local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
@@ -1514,6 +1518,7 @@ function refreshPlayerView()
 						end;
 					else
 						posY = posY + 32;
+						consoleLog('PlayerSlot [' .. i ..', '.. p .. ']: ' .. posY);
 
 						local slot = getElementEX(
 							menu.window_multiplayer_room.panel.page1.playerSlots, 
@@ -1717,37 +1722,20 @@ function refreshPlayerView()
 		    }
 		);
 
-		if (MULTIPLAYER_ROOM_MY_TEAM == 10) then
-			local teamBtn = clButton(
-			    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-			    304, 
-			    26, 
-			    150,
-			    18, 
-			    loc(825), -- leave
-			    'leaveTeam();',
-			    {
-			    	texture = 'classic/edit/menu_button_small_l.png',
-			    	texture2 = 'classic/edit/menu_button_small_c.png',
-			    	texture3 = 'classic/edit/menu_button_small_r.png'
-			    }
-			);
-		else
-			local teamBtn = clButton(
-			    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
-			    304, 
-			    26, 
-			    150,
-			    18, 
-			    loc(839), -- join
-			    'joinToTeam(10, -1);',
-			    {
-			    	texture = 'classic/edit/menu_button_small_l.png',
-			    	texture2 = 'classic/edit/menu_button_small_c.png',
-			    	texture3 = 'classic/edit/menu_button_small_r.png'
-			    }
-			);
-		end;
+		local teamBtn = clButton(
+		    menu.window_multiplayer_room.panel.page1.spectatorSlots, 
+		    304, 
+		    26, 
+		    150,
+		    18, 
+		    loc(839), -- join
+		    'joinToTeam(10, -1);',
+		    {
+		    	texture = 'classic/edit/menu_button_small_l.png',
+		    	texture2 = 'classic/edit/menu_button_small_c.png',
+		    	texture3 = 'classic/edit/menu_button_small_r.png'
+		    }
+		);
 
 		posY = 50;
 
@@ -1755,6 +1743,11 @@ function refreshPlayerView()
 			for p = 1, #teamPlayers[10] do
 				local playerData = MULTIPLAYER_ROOM_DATA.Players[teamPlayers[10][p]];
 				local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
+
+				if (isMySlot) then
+					setText(teamBtn, loc(825));
+					set_Callback(teamBtn.ID, CALLBACK_MOUSECLICK, 'leaveTeam();');
+				end;
 
 				local slot = getElementEX(
 					menu.window_multiplayer_room.panel.page1.spectatorSlots, 
@@ -1889,14 +1882,12 @@ end;
 function joinToTeam(teamID, teamPos)
 	OW_MULTIROOM_SET_MYTEAMANDPOS(teamID, teamPos);
 	OW_MULTIROOM_SET_MYISSPEC(false);
-	MULTIPLAYER_ROOM_MY_TEAM = teamID;
 end;
 
 function leaveTeam()
 	OW_MULTIROOM_SET_MYTEAMANDPOS(0, -1);
 	OW_MULTIROOM_SET_MYISSPEC(false);
 	resetPlayerData(true);
-	MULTIPLAYER_ROOM_MY_TEAM = 0;
 end;
 
 -- reset player data
