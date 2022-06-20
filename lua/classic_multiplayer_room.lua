@@ -2058,6 +2058,10 @@ function generateMapSettings(SETTINGS, IS_HOST)
 
 	sgui_deletechildren(parent.ID);
 
+	if #SETTINGS.MAPPARAMS == 0 then
+		return;
+	end;
+
 	for i = 1, 51 do --SETTINGS.MAPPARAMCOUNT do
 		local param = SETTINGS.MAPPARAMS[i];
 
