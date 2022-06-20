@@ -893,6 +893,8 @@ function FROMOW_MULTIROOM_CONNSTATUS_NOTJOINED() -- Called by OW
 end;
 
 function FROMOW_MULTIPLAYER_STARTGAME() -- Called by OW
+	useModernGUILogic(); -- use global variables from Sali's GUI...
+	
     IN_LOBBY = false;
 	OW_IRC_DESTROY();
 	  	
@@ -922,17 +924,9 @@ end;
 
 -- main functions
 function startMultiplayerGame()
-	useModernGUILogic(); -- use global variables from Sali's GUI...
-
     if OW_ROOM_LAUNCH_GAME() then
         IN_LOBBY = false;
 		OW_IRC_DESTROY();
-  	  	
-		MULTIPLAYER_ROOM_ACTIVE = false;
-	  	MULTIPLAYER_ROOM_IS_HOST = false;
-	  	MULTIPLAYER_ROOM_IS_DEDI = false;
-	  	MULTIPLAYER_ROOM_DATA = {};
-	  	MULTIPLAYER_ROOM_MAP_DATA = {};
 
 	  	setVisible(menu.window_multiplayer_room, false);
 
