@@ -860,6 +860,9 @@ function FROMOW_MULTIROOM_UPDATE_MAP_LIST(UNRANKED, RANKED)
 	--MULTIPLAYER_ROOM_DATA.RANKED_MAPS    = RANKED.MAPLIST;
 	--MULTIPLAYER_ROOM_DATA.RANKED_COUNT   = RANKED.MAPLISTCOUNT;
 
+	MultiDef.MapList      = UNRANKED.MAPLIST;
+  	MultiDef.MapListCount = UNRANKED.MAPLISTCOUNT;
+
 	if (MULTIPLAYER_ALLOWED_MAPS == nil) then
 		MULTIPLAYER_ROOM_DATA.MAPS = UNRANKED.MAPLIST;
 	else
@@ -919,6 +922,8 @@ end;
 
 -- main functions
 function startMultiplayerGame()
+	useModernGUILogic(); -- use global variables from Sali's GUI...
+
     if OW_ROOM_LAUNCH_GAME() then
         IN_LOBBY = false;
 		OW_IRC_DESTROY();
@@ -1415,10 +1420,10 @@ function refreshPlayerView()
 
 		for i = 1, #MULTIPLAYER_ROOM_DATA.Players do
 			MULTIPLAYER_ROOM_DATA.Players[i].AVATAR_ID = generateAvatar(i, MULTIPLAYER_ROOM_DATA.Players[i].AVATAR, MULTIPLAYER_ROOM_DATA.Players[i].AVATARSEX, MULTIPLAYER_ROOM_DATA.Players[i].NATION);
+			playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
 
 			if (MULTIPLAYER_ROOM_DATA.Players[i].TEAM > 0) then
 				teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM] = addToArray(teamPlayers[MULTIPLAYER_ROOM_DATA.Players[i].TEAM], i);
-				playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1] = addToArray(playerMerged[MULTIPLAYER_ROOM_DATA.Players[i].TEAMPOS + 1], MULTIPLAYER_ROOM_DATA.Players[i].PLID);
 			end;
 		end;
 
@@ -1431,24 +1436,19 @@ function refreshPlayerView()
 		return;
 	end;
 
+	local posY = 0;
 
-	for i = 2, 9 do
-		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
-			teamCounter = teamCounter + 1;
+	if MULTIPLAYER_ROOM_DATA.TeamGame then
+		teamCounter = MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX + 1;
+
+		if (teamCounter < 5) then
+			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
+		else
+			setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
 		end;
-	end;
 
-	if (teamCounter < 5) then
-		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, 320);
-	else
-		setHeight(menu.window_multiplayer_room.panel.page1.playerSlots, teamCounter * 80);
-	end;
-
-	local posY = 0; -- start Y pos for elements
-
-	-- generate team names
-	for i = 2, 9 do
-		if (MULTIPLAYER_ROOM_DATA.TEAMDEF[i].NAME ~= '') then
+		-- generate team names
+		for i = 2, MULTIPLAYER_ROOM_DATA.TEAMDEF[1].SIDESMAX + 1 do
 			-- get team allowed positions
 			local allowedPositions = {};
 
@@ -1710,6 +1710,152 @@ function refreshPlayerView()
 			end;
 
 			posY = posY + 38;
+		end;
+	else
+		local allowedPositions = {};
+
+		for c = 1, 8 do
+			if (MULTIPLAYER_ROOM_DATA.TEAMDEF[1].ASSIGNED_POSITIONS[c]) then
+				allowedPositions = addToArray(allowedPositions, MULTIPLAYER_ROOM_DATA.SIDEDEF[c].NAME);
+			end;
+		end;
+
+		for p = 1, #MULTIPLAYER_ROOM_DATA.Players do
+			local playerData = MULTIPLAYER_ROOM_DATA.Players[p];
+			local isMySlot = MULTIPLAYER_ROOM_MY_PLID == playerData.PLID;
+			local allowedNations = {};
+
+			if (#allowedPositions > 0 and playerData.SIDE > 0) then
+				local nations = MULTIPLAYER_ROOM_DATA.SIDEDEF[playerData.SIDE].NATIONS;
+				
+				if (nations.US) then
+					allowedNations[1] = loc(810);
+				end;
+
+				if (nations.AR) then
+					allowedNations[2] = loc(811);
+				end;
+
+				if (nations.RU) then
+					allowedNations[3] = loc(812);
+				end;
+			end;
+
+			local slot = getElementEX(
+				menu.window_multiplayer_room.panel.page1.playerSlots, 
+				anchorLTRB,
+				XYWH(
+					2,
+					posY, 
+					750,
+					28
+				),
+				true,
+				{
+					texture = 'classic/edit/multiroom/player_slot.png'
+				}
+			);
+
+			local texture = 'notready';
+
+			if (playerData.PLID == 1 and playerData.READY) then
+				texture = 'server';
+			elseif (playerData.READY == true) then
+				texture = 'ready';
+			end;
+
+			local slotPlayerStatus = getElementEX(
+				slot, 
+				anchorLTRB,
+				XYWH(
+					4,
+					4, 
+					20,
+					20
+				),
+				true,
+				{
+					texture = 'classic/edit/special/' .. texture .. '.png'
+				}
+			);
+
+			if (isMySlot and (not canModifyServerSettings())) then
+				MULTIPLAYER_ROOM_IM_READY = playerData.READY;
+				set_Callback(slotPlayerStatus.ID, CALLBACK_MOUSEDOWN, 'setReadyMultiplayerGame();');
+				setChecked(menu.window_multiplayer_room.panel.ready, playerData.READY);
+			end;
+
+			local slotPlayerAvatar = getElementEX(
+				slot, 
+				anchorLTRB,
+				XYWH(
+					28,
+					4, 
+					20,
+					20
+				),
+				true,
+				{
+					texture = 'Avatars/unknow.png'
+				}
+			);
+
+			if (playerData.AVATAR_ID) then
+				SGUI_settextureid(slotPlayerAvatar.ID, playerData.AVATAR_ID, 80, 100, 80, 100);
+			end;
+
+			local slotPlayerName = getLabelEX(
+				slot,
+			    anchorT, 
+			    XYWH(50, 6, 220, 14),
+			    nil, 
+			    playerData.NAME, 
+			    {
+					nomouseevent = true,
+			        font_colour = WHITE(),
+			        font_name = BankGotic_14,
+			        wordwrap = false,
+			        text_halign = ALIGN_TOP,
+			        text_valign = ALIGN_LEFT,
+			        scissor = true
+			 	}
+			);
+
+			local slotColorPicker = clColorPicker(slot, isMySlot and ((not playerData.READY) or canModifyServerSettings()), playerData.COLOUR, 277, 5);
+
+			local slotPosition = clComboBox(
+			    slot,
+			    336,
+			    3,
+			    allowedPositions,
+			    playerData.SIDE,
+			    'OW_MULTIROOM_SET_MYSIDE(INDEX);',
+			    {
+			        width = 150,
+			        texture = 'classic/edit/combobox-short.png',
+			        defaultLabel = loc(809),
+			        disabled = (not isMySlot)
+			    }
+			);
+
+			if (not MULTIPLAYER_ROOM_DATA.MULTIMAP.RANDOMNATIONS) then
+				local slotNation = clComboBox(
+				    slot,
+				    488,
+				    3,
+				    allowedNations,
+				    playerData.NATION,
+				    'OW_MULTIROOM_SET_MYNATION(INDEX);',
+				    {
+				        width = 150,
+				        texture = 'classic/edit/combobox-short.png',
+				        defaultLabel = loc(809),
+				        disabled = (not isMySlot)
+				    }
+				);
+			end;
+
+			posY = posY + 32;
 		end;
 	end;
 
@@ -2191,12 +2337,58 @@ function canModifyServerSettings()
 	return MULTIPLAYER_ROOM_IS_HOST or MULTIPLAYER_ROOM_IS_DEDI;
 end;
 
+function useModernGUILogic()
+	-- modern gui logic
+	MultiDef.MultiMap = copytable(MULTIPLAYER_ROOM_DATA.MULTIMAP);
+	MultiDef.SideDef = copytable(MULTIPLAYER_ROOM_DATA.SIDEDEF);
+	MultiDef.TeamDef = copytable(MULTIPLAYER_ROOM_DATA.TEAMDEF);
+	MultiDef.MapName = copytable(MULTIPLAYER_ROOM_MAP_DATA);
+	Players = copytable(MULTIPLAYER_ROOM_DATA.Players);
+	MyID = MULTIPLAYER_ROOM_MY_PLID;
+	teamGame = MULTIPLAYER_ROOM_DATA.TeamGame;
+
+	local mapName = string.upper(MultiDef.MapName.MAP);
+	local gameName = string.upper(MultiDef.MapName.GAMETYPE);
+
+	if gameName == nil then 
+		gameName = ''; 
+	end;
+
+	if mapName == nil then 
+		mapName = ''; 
+	end;
+
+	AddData = LOAD_TEXT_TO_TABLE("missions/_Multiplayer/" .. mapName .. "/MultiDesc" .. gameName .. "");
+
+	if not AddData then
+		AddData = {};
+	end;
+
+	if string.find(gameName, 'UNITED NATIONS') then
+		MultiDef.MultiMap.UNITED = true;
+	else
+		MultiDef.MultiMap.UNITED = false;
+	end;
+
+	MultiDef.NationsText,MultiDef.NationsIcons,MultiDef.NationsLBars = getBaseNatNames(MultiDef.MultiMap.UNITED);
+	MultiDef.MultiMap.MODIFEDNATIONS = getModNation(AddData.MODIFEDNATIONS);
+
+	MultiDef.MultiMap.RESTRICTIONS = AddData.RESTRICTIONS;
+
+	if MultiDef.MultiMap.RESTRICTIONS == nil then
+		MultiDef.MultiMap.RESTRICTIONS = {};
+	end;
+
+	MultiDef.MultiMap.RESTRICTIONS.RESTRICTTECH = {};
+	MultiDef.MultiMap.RESTRICTIONS.RESTRICTBUILDINGS = {};
+	MultiDef.MultiMap.TECHLIMIT = AddData.TECHNOLOGYLIMITS;
+	MultiDef.MultiMap.POSCOORS = AddData.POSCOORS;
+	MultiDef.MultiMap.POSMARKS = AddData.POSMARKS;
+ 	MultiDef.MaxPlayers = MULTIPLAYER_ROOM_DATA.MaxPlayers;
+end;
+
 -- override functions
 -- @TODO
 function init_specBars()
-
-end;
-
-function initalizeDiplomacy()
 
 end;
