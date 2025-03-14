@@ -403,7 +403,7 @@ function clScrollBarEX2(PARENT, ANCHOR, POSSIZE, BINDTO, SKINTYPE, HORIZONTAL, P
         end;
     end;
 
-    return ELEMENT;
+    return ELEMENT.bar;
 end;
 
 function clScrollUpEventOn(MOUSEBUTTON, ELEMENT, SCROLL, TEXTURE)
@@ -469,6 +469,10 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
         PROPERTIES.clickSound = '"Effects/Interface/bclick.wav"';
     end;
 
+    if (PROPERTIES.anchor == nil) then
+        PROPERTIES.anchor = anchorNone;
+    end;
+
     if (PROPERTIES.clickSoundCancel) then
         PROPERTIES.clickSound = '"Effects/Interface/cancel.wav"';
     end;
@@ -483,7 +487,7 @@ function clButton(PARENT, X, Y, W, H, CAPTION, EVENT, PROPERTIES)
 
     return getImageButtonEX(
         PARENT, 
-        anchorNone, 
+        PROPERTIES.anchor, 
         XYWH(X, Y, W, H), 
         CAPTION, 
         '', 
@@ -615,6 +619,7 @@ function clCheckbox(PARENT, X, Y, EVENT, PROPERTIES)
         PROPERTIES
     );
 
+    --set_Callback(ELEMENT.ID, CALLBACK_CHECKED, EVENT);
     set_Callback(ELEMENT.ID, CALLBACK_MOUSEDOWN, EVENT);
 
     return ELEMENT;
@@ -671,6 +676,14 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
 
     if PROPERTIES.defaultLabel == nil then
         PROPERTIES.defaultLabel = '';
+    end;
+
+    if PROPERTIES.name == nil then
+        PROPERTIES.name = '';
+    end;
+
+    if PROPERTIES.blockElements == nil then
+        PROPERTIES.blockElements = nil;
     end;
 
     local label = '';
@@ -792,22 +805,24 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
 
     local elements = {};
 
-    for i = 1, table.getn(ITEMS) do
-        elements = addToArray(elements, clComboBoxItem(
-            ELEMENT.list.scroll, 
-            i, 
-            ITEMS[i], 
-            (SELECTEDITEM == i),
-            ELEMENT.ID,
-            ELEMENT.background.ID,
-            ELEMENT.list.ID, 
-            ELEMENT.comboBox.button.ID, 
-            ELEMENT.comboBox.selected.label.ID,
-            PROPERTIES.textureButton,
-            PROPERTIES.textureButtonClick,
-            CALLBACK,
-            PROPERTIES
-        ));
+    if (#ITEMS > 0) then
+        for i = 1, table.getn(ITEMS) do
+            elements = addToArray(elements, clComboBoxItem(
+                ELEMENT.list.scroll, 
+                i, 
+                ITEMS[i], 
+                (SELECTEDITEM == i),
+                ELEMENT.ID,
+                ELEMENT.background.ID,
+                ELEMENT.list.ID, 
+                ELEMENT.comboBox.button.ID, 
+                ELEMENT.comboBox.selected.label.ID,
+                PROPERTIES.textureButton,
+                PROPERTIES.textureButtonClick,
+                CALLBACK,
+                PROPERTIES
+            ));
+        end;
     end;
 
     if PROPERTIES.hint then
@@ -821,24 +836,149 @@ function clComboBox(PARENT, X, Y, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     COMBOBOX_LIST[ELEMENT.list.scroll.ID] = {
         ID = ELEMENT.list.scroll.ID,
         PARENT = ELEMENT.list.ID,
+        NAME = PROPERTIES.name,
+        BASIC = ELEMENT.ID,
         BACKGROUND = ELEMENT.background.ID,
         BUTTON = ELEMENT.comboBox.button.ID,
+        SELECTED = ELEMENT.comboBox.selected.ID,
         TEXTURE = PROPERTIES.textureButton,
+        LABEL = ELEMENT.comboBox.selected.label.ID,
         ITEMS = ITEMS,
-        SELECTED = SELECTEDITEM,
+        SELECTEDITEM = SELECTEDITEM,
         ELEMENTS = elements
     };
 
     return ELEMENT;
 end;
 
+function clComboBoxChangeHint(ID, HINT)
+    if (COMBOBOX_LIST == nil) then
+        return;
+    end;
+
+    for i, v in pairs(COMBOBOX_LIST) do
+        if (inArray(v.ELEMENTS, ID)) then
+            setHint({ID = v.SELECTED}, HINT);
+            break;
+        end;
+    end;
+end;
+
+function clUpdateComboBoxItems(LIST, ITEMS, CALLBACK, PROPERTIES)
+    local elements = {};
+
+    if PROPERTIES.texture == nil then
+        PROPERTIES.texture = 'classic/edit/combobox-small-text.png';
+    end;
+
+    if PROPERTIES.textureButton == nil then
+        PROPERTIES.textureButton = 'classic/edit/combobox-small-button.png';
+    end;
+
+    if PROPERTIES.textureButtonClick == nil then
+        PROPERTIES.textureButtonClick = 'classic/edit/combobox-small-button-click.png';
+    end;
+
+    if PROPERTIES.textureList == nil then
+        PROPERTIES.textureList = 'classic/edit/combobox-small-list.png';
+    end;
+
+    if PROPERTIES.visible == nil then
+        PROPERTIES.visible = true;
+    end;
+
+    if PROPERTIES.disabled == nil then
+        PROPERTIES.disabled = false;
+    end;
+
+    if PROPERTIES.width == nil then
+        PROPERTIES.width = 234;
+    end;
+
+    if PROPERTIES.height == nil then
+        PROPERTIES.height = 22;
+    end;
+
+    if PROPERTIES.widthList == nil then
+        PROPERTIES.widthList = 234;
+    end;
+
+    if PROPERTIES.heightList == nil then
+        PROPERTIES.heightList = 270;
+    end;
+
+    if PROPERTIES.trimLength == nil then
+        PROPERTIES.trimLength = 22;
+    end;
+
+    if PROPERTIES.trimFrom == nil then
+        PROPERTIES.trimFrom = 1;
+    end;
+
+    if PROPERTIES.defaultLabel == nil then
+        PROPERTIES.defaultLabel = '';
+    end;
+
+    local SELECTEDITEM = COMBOBOX_LIST[LIST].SELECTEDITEM;
+
+    local label = '';
+
+    if ITEMS[SELECTEDITEM] == nil then
+        label = PROPERTIES.defaultLabel;
+    else
+        label = ITEMS[SELECTEDITEM];
+    end;
+
+    if (#ITEMS > 0) then
+        sgui_deletechildren(LIST);
+
+        setText({ID = COMBOBOX_LIST[LIST].LABEL}, SGUI_widesub(label, PROPERTIES.trimFrom));
+
+        for i = 1, table.getn(ITEMS) do
+            elements = addToArray(elements, clComboBoxItem(
+                {ID = LIST},--ELEMENT.list.scroll, 
+                i, 
+                ITEMS[i], 
+                (SELECTEDITEM == i),
+                LIST,
+                COMBOBOX_LIST[LIST].BACKGROUND,
+                COMBOBOX_LIST[LIST].PARENT, 
+                COMBOBOX_LIST[LIST].BUTTON, 
+                COMBOBOX_LIST[LIST].LABEL,
+                PROPERTIES.textureButton,
+                PROPERTIES.textureButtonClick,
+                CALLBACK,
+                PROPERTIES
+            ));
+        end;
+
+    COMBOBOX_LIST[LIST].ITEMS = ITEMS;
+    COMBOBOX_LIST[LIST].ELEMENTS = elements;
+    end;
+
+    setX({ID = COMBOBOX_LIST[LIST].PARENT}, getAbsX({ID = COMBOBOX_LIST[LIST].BASIC}));
+    setY({ID = COMBOBOX_LIST[LIST].PARENT}, getAbsY({ID = COMBOBOX_LIST[LIST].BASIC}) + 22);
+    setEnabled({ID = COMBOBOX_LIST[LIST].BASIC}, not PROPERTIES.disabled);
+end
+
 function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID, LISTID, COMBOBOXBUTTONID, COMBOBOXLABELID, BUTTONTEXTURE, BUTTONCLICKTEXTURE, CALLBACK, PROPERTIES)
     CALLBACK = string.gsub(CALLBACK, "%VALUE", VALUE);
     CALLBACK = string.gsub(CALLBACK, "%INDEX", INDEX);
 
     local colour = WHITEA();
+    local textColour = BLACK();
+    local isBlocked = false;
+
+    if (PROPERTIES.blockElements ~= nil) then
+        isBlocked = inArray(PROPERTIES.blockElements, VALUE);
+
+        if (isBlocked) then
+            textColour = RGB(191, 191, 191);
+        end;
+    end;
 
     if (SELECTED) then
+        textColour = BLACK();
         colour = RGB(191, 191, 191);
     end;
 
@@ -862,12 +1002,18 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         {
             hint = SGUI_widesub(VALUE, PROPERTIES.trimFrom),
             colour1 = colour,
-            callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
-            callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK
+            -- callback_mouseleave = 'clHoverItem(%id, 0, ' .. BoolToInt(SELECTED) .. ');',
+            -- callback_mouseover = 'clHoverItem(%id, 1, ' .. BoolToInt(SELECTED) .. ');',
+            -- callback_mousedown = 'clSelectComboBoxItem(%id, ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK
         }
     );
-    
+
+    if (not isBlocked) then
+        set_Callback(item.ID, CALLBACK_MOUSELEAVE, 'clHoverItem(' .. item.ID .. ', 0, ' .. BoolToInt(SELECTED) .. ');');
+        set_Callback(item.ID, CALLBACK_MOUSEOVER, 'clHoverItem(' .. item.ID .. ', 1, ' .. BoolToInt(SELECTED) .. ');');
+        set_Callback(item.ID, CALLBACK_MOUSEDOWN, 'clSelectComboBoxItem(' .. item.ID .. ', ' .. PARENT.ID .. ',' .. BACKGROUNDID .. ',' .. ELEMENTID .. ',' .. LISTID .. ',' .. COMBOBOXBUTTONID .. ', ' .. COMBOBOXLABELID .. ', "' .. BUTTONTEXTURE .. '", "' .. BUTTONCLICKTEXTURE .. '", ' .. INDEX .. ', "'.. VALUE .. '", "' .. PROPERTIES.trimFrom .. '", "' .. PROPERTIES.trimLength .. '"); ' .. CALLBACK);
+    end;
+
     item.label = getLabelEX(
         item,
         anchorLTRB,
@@ -875,9 +1021,9 @@ function clComboBoxItem(PARENT, INDEX, VALUE, SELECTED, ELEMENTID, BACKGROUNDID,
         nil,
         SGUI_widesub(VALUE, PROPERTIES.trimFrom, PROPERTIES.trimLength),
         {
-            font_colour = BLACK(),
+            font_colour = textColour,
             nomouseevent = true,
-            font_name = BankGotic_14,
+            font_name = BankGotic_14
         }
     );
 
@@ -992,7 +1138,7 @@ function clListBox(PARENT, POS, ITEMS, SELECTEDITEM, CALLBACK, PROPERTIES)
     ELEMENT.list.scroll = getScrollboxEX(
         ELEMENT, 
         anchorNone, 
-        XYWH(0, 0, ELEMENT.list.width, ELEMENT.list.height - 6),
+        XYWH(0, 3, ELEMENT.list.width, ELEMENT.list.height - 7),
         {
             colour1 = WHITEA()
         }
@@ -1625,7 +1771,7 @@ function clDebug(VALUE)
     LUA_TO_DEBUGLOG(dump(VALUE));
 end;
 
-function clColorPicker(PARENT, ACTIVE, COLOR, X, Y)
+function clColorPicker(PARENT, ACTIVE, COLOR, X, Y, BANNED_COLOURS)
     if COLOR < 0 or COLOR > 8 then
         COLOR = 0;
     end;
@@ -1695,23 +1841,41 @@ function clColorPicker(PARENT, ACTIVE, COLOR, X, Y)
         );
 
         for i = 1, 9 do
+            local isBannedColour = false;
+
+            if (BANNED_COLOURS) then
+                isBannedColour = inArray(BANNED_COLOURS, i - 1);
+            end;
+
+            local colourTexture = WHITEA();
+
+            if isBannedColour then
+                colourTexture = WHITEA(155);
+            end;
+
             local color = getElementEX(
                 ELEMENT.combo,
                 anchorNone,
-                XYWH(0, 4 + (i - 1) * 14, 36, 13),
+                XYWH(3, 3 + (i - 1) * 14, 30, 14),
                 true,
                 {
-                    colour1 = WHITEA()
+                    colour1 = colourTexture
                 }
             );
 
-            set_Callback(color.ID, CALLBACK_MOUSEDOWN, 'OW_MULTIROOM_SET_MYCOLOUR(' .. (i - 1) .. '); setVisibleID(' .. ELEMENT.background.ID .. ', false);'); 
+            if not isBannedColour then
+                set_Callback(color.ID, CALLBACK_MOUSEDOWN, 'OW_MULTIROOM_SET_MYCOLOUR(' .. (i - 1) .. '); setVisibleID(' .. ELEMENT.background.ID .. ', false);'); 
+            else
+                setTexture(color, 'classic/edit/ban_colour.png');
+            end;
         end;
 
         set_Callback(ELEMENT.comboBox.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
         set_Callback(ELEMENT.comboBox.button.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', true);');
         set_Callback(ELEMENT.background.ID, CALLBACK_MOUSEDOWN, 'setVisibleID(' .. ELEMENT.background.ID .. ', false);');
     end;
+
+    return ELEMENT;
 end;
 
 function filesInMod(mod, directory)
@@ -1728,4 +1892,16 @@ end;
 
 function hasSkirmishInMod(mod)
     return hasFilesInMod(mod, 'missions/_skirmish') or hasFilesInMod(mod, 'Missions/_Skirmish');
+end;
+
+function saveExists(NAME)
+    local saves = OW_CUSTOMSAVE_SAVELIST();
+
+    for i = 1,#saves do
+        if saves[i] == NAME then
+            return true;
+        end;
+    end;
+
+    return false;
 end;

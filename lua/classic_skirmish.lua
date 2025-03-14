@@ -3,6 +3,7 @@ SKIRMISH_DISPLAY_DATA = {};
 SKIRMISH_SELECTED = nil;
 SKIRMISH_INIT = false;
 SKIRMISH_ACTIVE_GAMETYPE = nil;
+SKIRMISH_GAME_TYPE = 1;
 
 function FROMOW_SKIRMISH_LISTBOX_ADD(INFO, INDEX) -- Called by OW!
 	if (SKIRMISH_ALLOWED_MAPS == nil or inArray(SKIRMISH_ALLOWED_MAPS, INFO.map)) then
@@ -12,9 +13,9 @@ function FROMOW_SKIRMISH_LISTBOX_ADD(INFO, INDEX) -- Called by OW!
 		if (SKIRMISH_SELECTED == nil) and (#SKIRMISH_DATA > 0) then
 			SKIRMISH_SELECTED = #SKIRMISH_DATA;-- INDEX + 1;
 
-			if (not SKIRMISH_INIT) then				
-				setMap();
-			end;
+			--if (not SKIRMISH_INIT) then				
+			--	setMap();
+			--end;
 		end;
 	end;
 end;
@@ -100,6 +101,7 @@ end;
 function changeGameType(ID)
 	OW_SKIRMISH_SET_MAPPARAM(50, ID);
 	SKIRMISH_ACTIVE_GAMETYPE = parseInt(ID);
+	SKIRMISH_GAME_TYPE = SKIRMISH_ACTIVE_GAMETYPE;
 	setMap();
 end;
 
@@ -142,6 +144,7 @@ function reloadSkirmishList()
 	SKIRMISH_DATA = {};
 	SKIRMISH_DISPLAY_DATA = {};
 	SKIRMISH_SELECTED = nil;
+	SKIRMISH_GAME_TYPE = 1;
 
 	clSetListItems(menu.window_skirmish_popup.panel.list, {}, 0, '', {});
 
@@ -371,13 +374,23 @@ menu.window_skirmish_popup.panel.cancel = clButton(
 
 function showSkirmishWindow(MODE)
 	if MODE == 1 then
-		if parseInt(OW_SAVENEXIT_CHECK()) == 2 then
+		local loadGameStatus = parseInt(OW_SAVENEXIT_CHECK());
+
+		if loadGameStatus == 0 or loadGameStatus == 2 then
 	        return;
 	    end;
 	    
 		showMenuButton(0);
 		setVisible(menu.window_skirmish, true);
-		reloadSkirmishList();
+
+		if (not SKIRMISH_INIT) then
+			reloadSkirmishList();
+			setMap();
+		end;
+
+		SKIRMISH_INIT = true;
+
+		showChangeSkirmishPanel(1);
 	else
 		setVisible(menu.window_skirmish, false);
 		showMenuButton(2);
@@ -386,10 +399,6 @@ end;
 
 function showChangeSkirmishPanel(MODE)
 	if (MODE == 1) then
-		SKIRMISH_INIT = true;
-
-		reloadSkirmishList();
-		
 		clSetListItems(menu.window_skirmish_popup.panel.list, SKIRMISH_DISPLAY_DATA, SKIRMISH_SELECTED, 'changeSkirmish(INDEX)', {}); 
 		clSetListSelectedItem(menu.window_skirmish_popup.panel.list.ID, SKIRMISH_SELECTED);
 		setText(menu.window_skirmish_popup.panel.description, text(SKIRMISH_DATA[SKIRMISH_SELECTED].desc, 164, '...'));

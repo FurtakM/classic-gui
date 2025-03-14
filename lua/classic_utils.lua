@@ -3,6 +3,9 @@
     03-2020
 --]]
 
+--LUAScript.ToLua('OWV_VERSION=0;OWV_PROFILE=1;OWV_MODVER=2;OWV_ISMOD=3;OWV_DEVMODE=4;OWV_ISEDITOR=5;OWV_STEAMUSERNAME=6;OWV_USERNAME=7;OWV_MULTIPLAYER=8;OWV_PROTOCOLVERSION=9;OWV_IAMSERVER=10;OWV_MULTI_JOINED=11;OWV_SKIRMISH=12;OWV_LANG=13;OWV_MYSIDE=14;OWV_MODDIR=15');
+--LUAScript.ToLua('OWV_GAMEPAUSED=16;OWV_INGAME_VIDEO=17;OWV_STOP_ACTION=18;OWV_IAMDEDIHOST=19;OWV_PROFILENAME=20;OWV_ISDEMO=21;');
+
 TID_Main_Menu_User = 494;
 TID_Main_Menu_Play = 804;
 TID_Main_Menu_Skirmish = 539;
@@ -48,6 +51,17 @@ TID_Main_Menu_Options_Interface_Label = 5035;
 TID_Main_Menu_Options_Objectives_Desc = 5036;
 TID_Main_Menu_SteamOverlay_Desc = 5037;
 TID_Main_Menu_ChangeAvatar = 5038;
+
+TID_Main_Menu_Options_Monitors_All = 5043;
+TID_Main_Menu_Options_Audio_Desc = 5044;
+TID_Main_Menu_Options_Audio_Hint = 5045;
+TID_msg_Reset = 5046;
+TID_Main_Menu_Shortcuts_Files_Hint = 5047;
+TID_msg_SaveAs = 5048;
+TID_msg_Default = 5049;
+TID_msg_Search = 5050;
+TID_Main_Menu_Options_Exclamations_Volume = 5061;
+TID_Main_Menu_Options_Exclamations_Volume_Desc = 5062;
 
 TID_Main_Menu_Campaign_Ape_Hint = 5100;
 TID_Main_Menu_Campaign_X1_Hint = 5102;
@@ -107,6 +121,16 @@ function length(t)
   	return count;
 end;
 
+function prependToArray(array, element)
+    table.insert(array, 1, element);
+    return array;
+end;
+
+function appendToArray(array, element)
+    table.insert(array, #array + 1, element);
+    return array;
+end;
+
 function addToArray(array, element)
     array[#array + 1] = element;
     return array;
@@ -156,85 +180,9 @@ function split(source, delimiters)
     return elements;
 end;
 
-function getLanguagesKey()
-    return {
-        'ENG',
-        'CZE',
-        'FRA',
-        'GER',
-        'POL',
-        'SPA',
-        'JAP',        
-        'RUS',
-        'SLO',        
-        'SWE',
-        'ITA',
-    }
-end;
-
-function getLanguages()
-    return {
-        'English',
-        'Ceština',
-        'Français',
-        'Deutsche',
-        'Polski',
-        'Español',
-        'Nihonjin',        
-        'Pусский',
-        'Slovenščina',        
-        'Svenska',
-        'Italiano',
-    }
-end;
-
-function getAudioLanguages()
-    return {
-        'English',
-        'Ceština',
-        'Français',
-        'Deutsche',
-        'Polski',
-        'Español',
-    }
-end;
-
-function getSubtitles()
-    return {
-        loc(TID_Options_Subtitles_Off),
-        loc(TID_Options_Subtitles_Video),
-        loc(TID_Options_Subtitles_Audio),
-        loc(TID_Options_Subtitles_Both)
-    };
-end;
-
-function getWindowedList()
-    return {
-        loc(TID_Options_Windowed_Fullscreen),
-        loc(TID_Options_Windowed_Window),
-        loc(TID_Options_Windowed_Bordeless)
-    };
-end;
-
-function getAchivFilter()
-    return {
-        loc(TID_Main_Menu_Filter_Achiv_All),
-        loc(TID_Main_Menu_Filter_Achiv_Done),
-        loc(TID_Main_Menu_Filter_Achiv_Undone)
-    };
-end;
-
-function getAchivFilterMission() 
-    local tmp = {
-        loc(TID_Main_Menu_Filter_Achiv_All)
-    };
-
-    for i = 1, 20 do
-        tmp[i+1] = loc(417) .. ' ' .. i;
-    end;
-
-    return tmp;
-end;
+function round(num)
+    return num >= 0 and math.floor(num + 0.5) or math.ceil(num - 0.5);
+end
 
 function setVisibleAll(ARRAY, MODE)
     local result = false;
@@ -281,6 +229,14 @@ end;
 
 function strlen(TEXT)
     return string.len(TEXT);
+end;
+
+function safeText(TEXT)
+    TEXT = string.gsub(TEXT, '%"', "“");
+    TEXT = string.gsub(TEXT, '%/', "");
+    TEXT = string.gsub(TEXT, '\\', "");
+
+    return TEXT;
 end;
 
 function text(TEXT, MAXLENGTH, APPENDCHAR)
@@ -362,7 +318,7 @@ function copy(obj, seen)
     return res;
 end;
 
-function stringToArray(str)
+function stringBitToArray(str)
     local t = {};
 
     for i = 1, #str do
@@ -370,6 +326,27 @@ function stringToArray(str)
     end;
 
     return t;
+end;
+
+function stringNumberToArray(str)
+    if (strlen(str) == 0) then
+        return {};
+    end;
+
+    local result = {};
+
+    repeat
+      local match = string.match(str, "%d+");
+
+      if match then
+         result[#result + 1] = match;
+         str = string.sub(str, strlen(match) + 2, -1);
+      else
+         break;
+      end;
+    until strlen(str) == 0;
+
+    return result;
 end;
 
 function setFocusID(ID)
@@ -400,6 +377,16 @@ function unionArray(a, b)
     return result;
 end;
 
+function joinArray(a, b)
+    local result = a;
+
+    for i = 1, #b do
+        result = addToArray(result, b[i]);
+    end;
+
+    return result;
+end
+
 function isSkirmish()
     return getvalue(OWV_SKIRMISH);
 end;
@@ -407,3 +394,33 @@ end;
 function isMultiplayer()
     return getvalue(OWV_MULTIPLAYER);
 end;
+
+function setFontColourID(ID, COLOR)
+    setFontColour({ID=ID}, COLOR);
+end;
+
+function setParentID(ELEMENT_ID, PARENT_ID)
+   if PARENT_ID == nil then
+      SGUI_setparent(ELEMENT_ID, 0);
+   else
+      SGUI_setparent(ELEMENT_ID, PARENT_ID);
+   end;
+end;
+
+function getChildernIDs(ELEMENT_ID)
+    return sgui_get(ELEMENT_ID, PROP_CHILDIDS);
+end;
+
+function kFormat(VALUE)
+    VALUE = parseInt(VALUE);
+
+    if (VALUE < 1000) then
+        return VALUE;
+    end;
+
+    if (VALUE < 1000000) then
+        return (VALUE / 1000) .. 'k';
+    end;
+
+    return (VALUE / 1000000) .. 'm';
+end

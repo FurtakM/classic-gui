@@ -2,9 +2,14 @@
 -- version check
 if (not compareVersions(getvalue(OWV_VERSION), MOD_DATA.Req_Ver)) then
     getCustomDialog({
-        COUNT = 1,
+        COUNT = 2,
         QUESTION = loc(TID_Main_Menu_Mod_Old_Ver) .. ' ' .. MOD_DATA.Req_Ver,
         LIST = {
+            {
+                NAME = loc(5066),
+                CALLBACK = 'OW_SOS_CLICKED("patches");',
+                PREVENT_CLOSE = true
+            },
             {
                 NAME = loc(TID_Main_Menu_Quit),
                 CALLBACK = 'exit();'
@@ -34,22 +39,22 @@ classic_logo = getElementEX(
 menu.window = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 155, 194, 310),
+    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 155, 270, 310),
     true,
     {}
 );
 
-setTexture(menu.window, 'classic/edit/mainmenu.png');
+setTexture(menu.window, 'classic/edit/mainmenu-7.png');
 
 menu.window2 = getElementEX(
     menu,
     anchorNone,
-    XYWH(LayoutWidth / 2 - 97, LayoutHeight / 2 - 92, 194, 184),
+    XYWH(LayoutWidth / 2 - 135, LayoutHeight / 2 - 92, 270, 184),
     true,
     {}
 );
 
-setTexture(menu.window2, 'classic/edit/mainmenu2.png');
+setTexture(menu.window2, 'classic/edit/mainmenu-4.png');
 setVisible(menu.window2, false);
 
 -- buttons
@@ -57,7 +62,7 @@ menu.window.user = clButton(
     menu.window, 
     12, 
     19, 
-    170,
+    248,
     30,
     loc(TID_Main_Menu_User) .. ': ' .. PROFILE_NAME,
     'showProfile(1);',
@@ -68,7 +73,7 @@ menu.window.play = clButton(
     menu.window, 
     12, 
     61, 
-    170,
+    248,
     30,
     loc(TID_Main_Menu_Play), 
     'showMenuButton(2);',
@@ -79,7 +84,7 @@ menu.window.mods = clButton(
     menu.window, 
     12, 
     103,
-    170,
+    248,
     30, 
     loc(TID_MODS), 
     'showMods(1);',
@@ -90,7 +95,7 @@ menu.window.options = clButton(
     menu.window, 
     12, 
     145, 
-    170,
+    248,
     30, 
     loc(TID_Main_Menu_Options), 
     'showOptions(1);',
@@ -101,7 +106,7 @@ menu.window.achivs = clButton(
     menu.window, 
     12, 
     187, 
-    170,
+    248,
     30, 
     loc(TID_ACHIEVEMENTS), 
     'showAchivs(1);',
@@ -112,7 +117,7 @@ menu.window.credits = clButton(
     menu.window, 
     12, 
     229, 
-    170,
+    248,
     30, 
     loc(TID_Main_Menu_Extras_Credits), 
     'showCredits();',
@@ -123,7 +128,7 @@ menu.window.quit = clButton(
     menu.window, 
     12, 
     271,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Quit), 
     'exit();',
@@ -134,7 +139,7 @@ menu.window2.campaign = clButton(
     menu.window2, 
     12, 
     19,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Campaign), 
     'showCampaign(1)',
@@ -145,7 +150,7 @@ menu.window2.multiplayer = clButton(
     menu.window2, 
     12, 
     61, 
-    170,
+    248,
     30, 
     loc(TID_Main_Menu_Multiplayer), 
     'showMultiplayerWindow(1);',
@@ -156,7 +161,7 @@ menu.window2.skirmish = clButton(
     menu.window2, 
     12, 
     103,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Skirmish), 
     'showSkirmishWindow(1);',
@@ -169,7 +174,7 @@ menu.window2.back = clButton(
     menu.window2, 
     12, 
     145,
-    170,
+    248,
     30,  
     loc(TID_Main_Menu_Campaign_Back), 
     'showMenuButton(1);',
@@ -293,3 +298,9 @@ setVisible(menu.side, false);
 setVisible(menu.window, true);
 setVisible(classic_logo, true);
 setVisible(profilebar, getSetting(OPTION_STEAMOVERLAY));
+
+SGUI_INIT_CLASSIC_OLD = Init;
+function Init()
+    setText(menu.window.user, loc(TID_Main_Menu_User) .. ': ' .. getvalue(OWV_PROFILENAME));
+    SGUI_INIT_CLASSIC_OLD();
+end;
